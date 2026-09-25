@@ -119,7 +119,7 @@ const DUNGEON_KINDS = [
 ];
 
 function* placeDungeon(ctx, cfg, rand) {
-  const floor = findFloor(ctx, rand);
+  const floor = findFloor(ctx, rand, DUNGEON_SPAWNER[0]);
   if (!floor) return;
 
   const [fx, fy, fz] = floor;
@@ -263,7 +263,7 @@ function pickVault(rand) {
 }
 
 function* placeVault(ctx, cfg, rand) {
-  const floor = findFloor(ctx, rand);
+  const floor = findFloor(ctx, rand, VAULT_CENTER[0]);
   if (!floor) return;
 
   const [fx, fy, fz] = floor;
@@ -302,8 +302,14 @@ function* placeVault(ctx, cfg, rand) {
 // 置き場所を探す
 // ===========================================================================
 
-/** 洞窟の床を探す。壁リストのうち、上が空洞になっているもの */
-function findFloor(ctx, rand) {
+/**
+ * 洞窟の床を探す。壁リストのうち、上が空洞になっているもの。
+ *
+ * half を渡すと、床を中心にその幅の範囲が水や溶岩に掛からない場所だけを選ぶ。
+ * 帯の下半分が彫られるようになって溶岩湖や水没した一帯の底も
+ * 「床」に数えられるので、そのままだと湖の底に部屋が沈む。
+ */
+function findFloor(ctx, rand, half = 0) {
   const spots = ctx.wallSpots;
   if (!spots || spots.length === 0) return null;
 
@@ -313,6 +319,7 @@ function findFloor(ctx, rand) {
     if (y < ctx.yMin + 4 || y > ctx.yMax - 8) continue;
     if (!ctx.isSolid(x, y, z)) continue;
     if (ctx.isSolid(x, y + 1, z)) continue;   // 上が空洞 = 床
+    if (ctx.wetNear && ctx.wetNear(x, y + 1, z, half)) continue;
     return [x, y + 1, z];
   }
   return null;

@@ -330,16 +330,31 @@ function lavaPuddle(st, wx, wy, wz) {
   return ((hash3(wx, 5150, wz) + 1) / 2) < chance;
 }
 
-/** 空洞のそのマスに入るブロック */
+/** 流体の縁を塞ぐ岩の目印。置くときに石か深層岩へ置き換える */
+const BARRIER = "#barrier";
+
+/**
+ * 空洞のそのマスに入るブロック (隣の列を見ない素の判定)。
+ *
+ * 水と溶岩の間は空気ではなく岩で仕切る。以前は空気を空けていたが、
+ * 水が空気の上に乗る形になり、流れ落ちて溶岩と触れていた。
+ */
 function fluidAt(st, y, lava, water) {
   if (y <= lava) return "minecraft:lava";
   const f = st.cfg.fluids;
-  // 水を溶岩の真上に置くと接触で石ができる。間を空ける。
-  if (water > -Infinity && y <= water && y > lava + (f?.lavaClearance ?? 3)) {
+  const clearance = f?.lavaClearance ?? 3;
+  if (water > -Infinity && y <= water) {
     // 氷の洞窟では水の代わりに氷で満たす (凍った湖)
-    return f?.waterBlock ?? "minecraft:water";
+    if (y > lava + clearance) return f?.waterBlock ?? "minecraft:water";
+    // 溶岩面のすぐ上。この上に水があるなら岩の層にする
+    if (water > lava + clearance) return BARRIER;
   }
   return BLOCK_AIR;
+}
+
+/** 流れる流体か。氷など流れないものは縁を塞がなくてよい */
+function isFlowing(block) {
+  return block === "minecraft:lava" || block === "minecraft:water";
 }
 
 // ===========================================================================
@@ -533,15 +548,41 @@ function* waitForChunk(st, dim, x, z, maxTicks) {
   return false;
 }
 
-function verifyFilled(st, dim, x0, z0) {
-  const y = Math.floor((st.yMin + st.yMax) / 2);
-  for (const [dx, dz] of [[1, 1], [8, 8], [14, 14]]) {
-    try {
-      const b = dim.getBlock({ x: x0 + dx, y, z: z0 + dz });
-      if (b && b.typeId !== BLOCK_AIR) return true;
-    } catch (e) { /* noop */ }
+const VERIFY_SPOTS = [[1, 1], [8, 8], [14, 14], [3, 12], [12, 3]];
+
+/**
+ * 母岩が入っているかを確かめる。
+ *
+ * isSolid を渡さないときは母岩を埋めた直後とみなし、16段ごとの全層で
+ * 全点が埋まっていることを求める。fillBlocks は層ごとに失敗しうるので、
+ * 中央の1層だけでは「一部の層だけ空っぽ」のチャンクを見逃していた。
+ *
+ * isSolid を渡したときは彫ったあとの確認で、岩のはずの点だけを見る。
+ * 以前は中央の高さの3点が全部空気だと「消失」と判定していたが、
+ * 大きな空洞がちょうどそこを通るチャンクでは毎回そうなる。
+ * 記録されないまま作り直しを繰り返し、そこに立つプレイヤーは
+ * 凍結されたままになっていた。
+ * ジオードや部屋も岩を抜くので、彫ったあとは半分以上が残っていれば良しとする。
+ * アンロードで消えたときはほぼ全点が空気になる。
+ */
+function verifyFilled(st, dim, x0, z0, isSolid) {
+  let checked = 0, missing = 0;
+  for (let y = st.yMin + 1; y < st.yMax; y += 16) {
+    for (const [dx, dz] of VERIFY_SPOTS) {
+      const x = x0 + dx, z = z0 + dz;
+      if (isSolid && !isSolid(x, y, z)) continue;
+      checked++;
+      try {
+        const b = dim.getBlock({ x, y, z });
+        if (!b || b.typeId === BLOCK_AIR) missing++;
+      } catch (e) {
+        missing++;
+      }
+    }
   }
-  return false;
+  if (!isSolid) return missing === 0;
+  // 岩のはずの点が1つも無いことはまず無いが、そのときは確かめようがない
+  return checked === 0 || missing * 2 <= checked;
 }
 
 // ===========================================================================
@@ -657,7 +698,22 @@ function* smoothPass(st, buf) {
 // ===========================================================================
 
 /**
- * 空気の場所だけを埋める。
+ * 母岩で置き換えてよいもの。
+ *
+ * 空気に加えて流体も含める。先に生成した隣のチャンクの溶岩や水は、
+ * 生成前の空っぽのチャンクへ流れ込んで底まで落ちる。空気だけを埋めると
+ * それが岩の中に残り、彫らない場所に溶岩が浮いて見えていた。
+ * 生成をやり直すときに、前回置いた流体を消す役目もある。
+ * 隣のチャンクが正当に置く流体がこのチャンクの中にあることは無い。
+ */
+const REPLACEABLE = [
+  "minecraft:air",
+  "minecraft:lava", "minecraft:flowing_lava",
+  "minecraft:water", "minecraft:flowing_water",
+];
+
+/**
+ * 空気 (と流れ込んだ流体) の場所だけを埋める。
  *
  * 隣のチャンクで生成したジオードや部屋は、このチャンクへはみ出すことがある。
  * チャンクを丸ごと埋めると、そのはみ出した部分を石で塗りつぶして壊してしまう
@@ -669,14 +725,15 @@ function fillAirOnly(st, dim, x1, y1, z1, x2, y2, z2, block) {
   if (y2 < st.yMin || y1 > st.yMax) return false;
   if (y1 < st.yMin) y1 = st.yMin;
   if (y2 > st.yMax) y2 = st.yMax;
-  try {
-    dim.fillBlocks(new BlockVolume({ x: x1, y: y1, z: z1 }, { x: x2, y: y2, z: z2 }), block,
-      { blockFilter: { includeTypes: ["minecraft:air"] } });
-    return true;
-  } catch (e) {
-    // 置き換え指定に対応していない環境では丸ごと埋める (以前の挙動)
-    return fillSafe(st, dim, x1, y1, z1, x2, y2, z2, block);
+  const vol = new BlockVolume({ x: x1, y: y1, z: z1 }, { x: x2, y: y2, z: z2 });
+  for (const types of [REPLACEABLE, ["minecraft:air"]]) {
+    try {
+      dim.fillBlocks(vol, block, { blockFilter: { includeTypes: types } });
+      return true;
+    } catch (e) { /* 次の指定で試す */ }
   }
+  // 置き換え指定に対応していない環境では丸ごと埋める (以前の挙動)
+  return fillSafe(st, dim, x1, y1, z1, x2, y2, z2, block);
 }
 
 function* fillSolid(st, dim, x0, z0) {
@@ -764,6 +821,58 @@ function chunkRand(cx, cz, salt) {
   return ((h >>> 0) / 4294967296);
 }
 
+/**
+ * 流体のマスが閉じ込められているかを判定する関数を作る。
+ *
+ * 流体の高さは列ごとにノイズで決まるので、隣の列より1段高いだけで
+ * 横の空気へ流れ出していた。流れた溶岩は隣の水と触れて丸石や黒曜石を作り、
+ * 生成前の隣のチャンクへ落ちて岩の中に残る。これが「溶岩の配置が安定しない」
+ * の正体だった。
+ *
+ * 横の4マスがどれも「岩」か「同じ流体」か「仕切りの岩」なら閉じている。
+ * 隣の判定は隣の列の水面・溶岩面から直接求めるので、チャンクの境目でも
+ * 両側で同じ答えになる。閉じていないマスは岩で塞ぐ。塞いだマスは岩なので、
+ * そのせいで別のマスが開くことは無い。
+ *
+ * 床の溜まり場 (lavaPuddle) は小さくこぼれる前提なので対象にしない。
+ */
+function fluidContainment(st, buf, src, x0, z0) {
+  const lavaA = new Float64Array(SW * SW);
+  const waterA = new Float64Array(SW * SW);
+  for (let i = 0; i < SW; i++) {
+    for (let j = 0; j < SW; j++) {
+      const wx = x0 - PAD + i, wz = z0 - PAD + j;
+      lavaA[i * SW + j] = lavaTop(st, wx, wz);
+      waterA[i * SW + j] = waterTop(st, wx, wz);
+    }
+  }
+  const smooth = st.field.smooth;
+
+  // 確実に岩か。チャンクの外の縁は均し前の値しか無いので、
+  // 均しで空気に変わりうるもの (真上が空気) は岩とみなさない
+  const surelySolid = (lx, lz, y) => {
+    const i = ((lx + PAD) * SW + (lz + PAD)) * MAX_H + (y - st.yMin);
+    if (lx >= 0 && lx < 16 && lz >= 0 && lz < 16) return src[i] === 0;
+    return buf.a[i] === 0 && (!smooth || y >= st.yMax || buf.a[i + 1] === 0);
+  };
+
+  return (lx, lz, y, kind) => {
+    for (const [dx, dz] of NEIGHBORS4) {
+      const nx = lx + dx, nz = lz + dz;
+      if (surelySolid(nx, nz, y)) continue;
+      const ci = (nx + PAD) * SW + (nz + PAD);
+      const b = fluidAt(st, y, lavaA[ci], waterA[ci]);
+      if (b !== kind && b !== BARRIER) return false;
+    }
+    return true;
+  };
+}
+
+const NEIGHBORS4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+
+/** 彫る区間が開いていないことの印 */
+const NO_RUN = -Infinity;
+
 function* generateChunk(st, buf, cx, cz) {
   const dim = caveDim(st.cfg.id);
   if (!dim) return;
@@ -790,17 +899,19 @@ function* generateChunk(st, buf, cx, cz) {
     const src = st.field.smooth ? buf.b : buf.a;
 
     // 2. 母岩。ここから彫り終わるまでが「詰まっている」時間
+    //    確認はプレイヤーの避難場所を空ける前に行う。空けたあとだと
+    //    その空気を「埋まっていない」と数えて埋め直してしまう
     yield* fillSolid(st, dim, x0, z0);
-    protectInside(st, dim, cx, cz);
-
     if (!verifyFilled(st, dim, x0, z0)) {
       yield* waitForChunk(st, dim, x0 + 8, z0 + 8, 30);
       yield* fillSolid(st, dim, x0, z0);
       if (!verifyFilled(st, dim, x0, z0)) {
+        protectInside(st, dim, cx, cz);
         reportSkip(cx, cz, "充填失敗");
         return;
       }
     }
+    protectInside(st, dim, cx, cz);
 
     // 4. 空洞を抜く。
     //    列ごとに fillBlocks すると132回かかる。同じ高さ・同じ中身の区間を
@@ -809,6 +920,8 @@ function* generateChunk(st, buf, cx, cz) {
     const carveMax = st.yMax - 1;
     const wallSpots = [];
     const hasFluid = !!st.cfg.fluids;
+    const contained = hasFluid ? fluidContainment(st, buf, src, x0, z0) : null;
+    const rockAt = (y) => (y < st.deepslateY ? st.blocks.deepslate : st.blocks.stone);
 
     // 区間をまとめるための入れ物。key = "開始_終了_ブロック"
     const groups = new Map();
@@ -828,9 +941,12 @@ function* generateChunk(st, buf, cx, cz) {
           g.cells.push(lx * 16 + lz);
         };
 
-        let runStart = -1;
+        // 区間が開いていないことの印。帯は y<0 まであるので -1 は使えない。
+        // 以前は -1 を印にしていたため、y<0 で始まる空洞が一切彫られず、
+        // 帯の下半分 (深層岩の層と溶岩湖) が丸ごと岩のままになっていた。
+        let runStart = NO_RUN;
         const closeRun = (end2) => {
-          if (runStart < 0) return;
+          if (runStart === NO_RUN) return;
           if (!hasFluid) {
             push(runStart, end2, BLOCK_AIR);
           } else {
@@ -839,8 +955,14 @@ function* generateChunk(st, buf, cx, cz) {
             if (segBlock === BLOCK_AIR && lavaPuddle(st, wx, runStart, wz)) {
               segBlock = "minecraft:lava";
             }
+            if (isFlowing(segBlock) && segBlock === fluidAt(st, runStart, lava, water)
+                && !contained(lx, lz, runStart, segBlock)) segBlock = BARRIER;
+            if (segBlock === BARRIER) segBlock = rockAt(runStart);
             for (let y = runStart + 1; y <= end2; y++) {
-              const b = fluidAt(st, y, lava, water);
+              let b = fluidAt(st, y, lava, water);
+              // 横が空気なら流れ出すので、そのマスは岩で塞ぐ
+              if (isFlowing(b) && !contained(lx, lz, y, b)) b = BARRIER;
+              if (b === BARRIER) b = rockAt(y);
               if (b !== segBlock) {
                 push(segStart, y - 1, segBlock);
                 segStart = y;
@@ -849,16 +971,16 @@ function* generateChunk(st, buf, cx, cz) {
             }
             push(segStart, end2, segBlock);
           }
-          runStart = -1;
+          runStart = NO_RUN;
         };
 
         for (let y = carveMin; y <= carveMax; y++) {
           if (src[base + (y - st.yMin)]) {
-            if (runStart < 0) {
+            if (runStart === NO_RUN) {
               runStart = y;
               if (y - 1 >= st.yMin) wallSpots.push(wx, y - 1, wz);
             }
-          } else if (runStart >= 0) {
+          } else if (runStart !== NO_RUN) {
             closeRun(y - 1);
             wallSpots.push(wx, y, wz);
           }
@@ -904,11 +1026,6 @@ function* generateChunk(st, buf, cx, cz) {
     protectInside(st, dim, cx, cz);   // 彫ったあとも念のため確保
     yield;
 
-    if (!verifyFilled(st, dim, x0, z0)) {
-      reportSkip(cx, cz, "鉱脈前に消失");
-      return;
-    }
-
     const isSolid = (wx, wy, wz) => {
       const lx = wx - x0 + PAD;
       const lz = wz - z0 + PAD;
@@ -917,6 +1034,12 @@ function* generateChunk(st, buf, cx, cz) {
       // ストライドは MAX_H。h を使うと別の高さを読み、空中に鉱石が置かれる
       return src[(lx * SW + lz) * MAX_H + (wy - st.yMin)] === 0;
     };
+
+    // 彫ったあとは岩のはずの点だけを見る (大空洞のチャンクを誤って弾かない)
+    if (!verifyFilled(st, dim, x0, z0, isSolid)) {
+      reportSkip(cx, cz, "鉱脈前に消失");
+      return;
+    }
 
     // 6. 鉱脈
     yield* placeVeins({
@@ -988,7 +1111,7 @@ function* generateChunk(st, buf, cx, cz) {
     }
     yield;
 
-    if (!verifyFilled(st, dim, x0, z0)) {
+    if (!verifyFilled(st, dim, x0, z0, isSolid)) {
       reportSkip(cx, cz, "途中で消失");
       return;
     }
@@ -1010,6 +1133,18 @@ function structureCtx(st, dim, cx, cz, x0, z0, wallSpots, isSolid) {
     yMin: st.yMin, yMax: st.yMax,
     wallSpots,
     isSolid,
+
+    /** (x,z) を中心に ±r の範囲で、高さ y より上まで水か溶岩が来ている列があるか */
+    wetNear: (x, y, z, r) => {
+      if (!st.cfg.fluids) return false;
+      for (const dx of r > 0 ? [-r, 0, r] : [0]) {
+        for (const dz of r > 0 ? [-r, 0, r] : [0]) {
+          const top = Math.max(lavaTop(st, x + dx, z + dz), waterTop(st, x + dx, z + dz));
+          if (top >= y - 1) return true;
+        }
+      }
+      return false;
+    },
 
     set: (x, y, z, block) => setSafe(st, dim, x, y, z, block),
     fill: (x1, y1, z1, x2, y2, z2, block) =>
