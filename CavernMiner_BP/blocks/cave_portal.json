@@ -1,0 +1,255 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:block": {
+    "description": {
+      "identifier": "cavern:cave_portal",
+      "states": {
+        "cavern:axis": [
+          "x",
+          "z"
+        ],
+        "cavern:kind": [
+          "gc",
+          "rc",
+          "dc",
+          "ic"
+        ]
+      }
+    },
+    "components": {
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:light_emission": 11,
+      "minecraft:collision_box": false,
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 0.3
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 0
+      },
+      "minecraft:map_color": "#2E8B79",
+      "minecraft:loot": "loot_tables/empty.json",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "portal_empty",
+          "render_method": "blend",
+          "face_dimming": false,
+          "ambient_occlusion": 0
+        },
+        "north": {
+          "texture": "cave_portal",
+          "render_method": "blend",
+          "face_dimming": false,
+          "ambient_occlusion": 0
+        },
+        "south": {
+          "texture": "cave_portal",
+          "render_method": "blend",
+          "face_dimming": false,
+          "ambient_occlusion": 0
+        }
+      }
+    },
+    "permutations": [
+      {
+        "condition": "q.block_state('cavern:kind') == 'gc' && q.block_state('cavern:axis') == 'x'",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "portal_empty",
+              "render_method": "blend",
+              "face_dimming": false,
+              "ambient_occlusion": 0
+            },
+            "east": {
+              "texture": "cave_portal",
+              "render_method": "blend",
+              "face_dimming": false,
+              "ambient_occlusion": 0
+            },
+            "west": {
+              "texture": "cave_portal",
+              "render_method": "blend",
+              "face_dimming": false,
+              "ambient_occlusion": 0
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('cavern:kind') == 'gc' && q.block_state('cavern:axis') == 'z'",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "portal_empty",
+              "render_method": "blend",
+              "face_dimming": false,
+              "ambient_occlusion": 0
+            },
+            "north": {
+              "texture": "cave_portal",
+              "render_method": "blend",
+              "face_dimming": false,
+              "ambient_occlusion": 0
+            },
+            "south": {
+              "texture": "cave_portal",
+              "render_method": "blend",
+              "face_dimming": false,
+              "ambient_occlusion": 0
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('cavern:kind') == 'rc' && q.block_state('cavern:axis') == 'x'",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "portal_empty",
+              "render_method": "blend",
+              "face_dimming": false,
+              "ambient_occlusion": 0
+            },
+            "east": {
+              "texture": "rich_portal",
+              "render_method": "blend",
+              "face_dimming": false,
+              "ambient_occlusion": 0
+            },
+            "west": {
+              "texture": "rich_portal",
+              "render_method": "blend",
+              "face_dimming": false,
+              "ambient_occlusion": 0
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('cavern:kind') == 'rc' && q.block_state('cavern:axis') == 'z'",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "portal_empty",
+              "render_method": "blend",
+              "face_dimming": false,
+              "ambient_occlusion": 0
+            },
+            "north": {
+              "texture": "rich_portal",
+              "render_method": "blend",
+              "face_dimming": false,
+              "ambient_occlusion": 0
+            },
+            "south": {
+              "texture": "rich_portal",
+              "render_method": "blend",
+              "face_dimming": false,
+              "ambient_occlusion": 0
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('cavern:kind') == 'dc' && q.block_state('cavern:axis') == 'x'",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "portal_empty",
+              "render_method": "blend",
+              "face_dimming": false,
+              "ambient_occlusion": 0
+            },
+            "east": {
+              "texture": "desert_portal",
+              "render_method": "blend",
+              "face_dimming": false,
+              "ambient_occlusion": 0
+            },
+            "west": {
+              "texture": "desert_portal",
+              "render_method": "blend",
+              "face_dimming": false,
+              "ambient_occlusion": 0
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('cavern:kind') == 'dc' && q.block_state('cavern:axis') == 'z'",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "portal_empty",
+              "render_method": "blend",
+              "face_dimming": false,
+              "ambient_occlusion": 0
+            },
+            "north": {
+              "texture": "desert_portal",
+              "render_method": "blend",
+              "face_dimming": false,
+              "ambient_occlusion": 0
+            },
+            "south": {
+              "texture": "desert_portal",
+              "render_method": "blend",
+              "face_dimming": false,
+              "ambient_occlusion": 0
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('cavern:kind') == 'ic' && q.block_state('cavern:axis') == 'x'",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "portal_empty",
+              "render_method": "blend",
+              "face_dimming": false,
+              "ambient_occlusion": 0
+            },
+            "east": {
+              "texture": "ice_portal",
+              "render_method": "blend",
+              "face_dimming": false,
+              "ambient_occlusion": 0
+            },
+            "west": {
+              "texture": "ice_portal",
+              "render_method": "blend",
+              "face_dimming": false,
+              "ambient_occlusion": 0
+            }
+          }
+        }
+      },
+      {
+        "condition": "q.block_state('cavern:kind') == 'ic' && q.block_state('cavern:axis') == 'z'",
+        "components": {
+          "minecraft:material_instances": {
+            "*": {
+              "texture": "portal_empty",
+              "render_method": "blend",
+              "face_dimming": false,
+              "ambient_occlusion": 0
+            },
+            "north": {
+              "texture": "ice_portal",
+              "render_method": "blend",
+              "face_dimming": false,
+              "ambient_occlusion": 0
+            },
+            "south": {
+              "texture": "ice_portal",
+              "render_method": "blend",
+              "face_dimming": false,
+              "ambient_occlusion": 0
+            }
+          }
+        }
+      }
+    ]
+  }
+}

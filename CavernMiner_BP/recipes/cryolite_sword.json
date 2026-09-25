@@ -1,0 +1,32 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "cavern:cryolite_sword"
+    },
+    "unlock": [
+      {
+        "item": "cavern:cryolite"
+      }
+    ],
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      " C ",
+      " C ",
+      " T "
+    ],
+    "key": {
+      "C": {
+        "item": "cavern:cryolite"
+      },
+      "T": {
+        "item": "minecraft:stick"
+      }
+    },
+    "result": {
+      "item": "cavern:cryolite_sword"
+    }
+  }
+}

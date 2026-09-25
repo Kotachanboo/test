@@ -1,0 +1,23 @@
+{
+  "format_version": "1.21.130",
+  "minecraft:client_biome": {
+    "description": {
+      "identifier": "cavern:ice_cavern"
+    },
+    "components": {
+      "minecraft:sky_color": {
+        "sky_color": "#0E1422"
+      },
+      "minecraft:fog_appearance": {
+        "fog_identifier": "cavern:ice_cavern_fog"
+      },
+      "minecraft:water_appearance": {
+        "surface_color": "#3D6FA8",
+        "surface_opacity": 0.8
+      },
+      "minecraft:precipitation": {
+        "white_ash": 0.11
+      }
+    }
+  }
+}

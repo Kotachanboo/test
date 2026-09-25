@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "magnite_pickaxe",
+    "metalness_emissive_roughness": "magnite_pickaxe_mer",
+    "normal": "magnite_pickaxe_normal"
+  }
+}

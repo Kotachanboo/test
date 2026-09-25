@@ -1,0 +1,33 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:block": {
+    "description": {
+      "identifier": "cavern:hexcite_block",
+      "menu_category": {
+        "category": "construction"
+      }
+    },
+    "components": {
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "hexcite_block",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:map_color": "#E8EEF6",
+      "minecraft:light_emission": 4,
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 6.0
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 9.0
+      },
+      "minecraft:light_dampening": 15,
+      "minecraft:tags": [
+        "minecraft:is_pickaxe_item_destructible"
+      ],
+      "minecraft:loot": "loot_tables/blocks/hexcite_block.json"
+    }
+  }
+}

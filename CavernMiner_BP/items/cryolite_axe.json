@@ -1,0 +1,60 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:item": {
+    "description": {
+      "identifier": "cavern:cryolite_axe",
+      "menu_category": {
+        "category": "equipment"
+      }
+    },
+    "components": {
+      "minecraft:icon": "cryolite_axe",
+      "minecraft:max_stack_size": 1,
+      "minecraft:hand_equipped": true,
+      "minecraft:can_destroy_in_creative": false,
+      "minecraft:damage": 7,
+      "minecraft:durability": {
+        "max_durability": 780
+      },
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "cavern:cryolite"
+            ],
+            "repair_amount": 195
+          }
+        ]
+      },
+      "minecraft:enchantable": {
+        "slot": "axe",
+        "value": 14
+      },
+      "minecraft:tags": {
+        "tags": [
+          "minecraft:is_axe",
+          "minecraft:diamond_tier",
+          "minecraft:is_tool",
+          "minecraft:digger"
+        ]
+      },
+      "minecraft:digger": {
+        "use_efficiency": true,
+        "destroy_speeds": [
+          {
+            "block": {
+              "tags": "q.any_tag('minecraft:is_axe_item_destructible')"
+            },
+            "speed": 8
+          },
+          {
+            "block": {
+              "tags": "q.any_tag('wood','pumpkin','plant')"
+            },
+            "speed": 8
+          }
+        ]
+      }
+    }
+  }
+}

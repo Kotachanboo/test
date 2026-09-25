@@ -1,0 +1,25 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "cavern:sunstone_from_block"
+    },
+    "unlock": [
+      {
+        "item": "cavern:sunstone_block"
+      }
+    ],
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "cavern:sunstone_block"
+      }
+    ],
+    "result": {
+      "item": "cavern:sunstone",
+      "count": 9
+    }
+  }
+}

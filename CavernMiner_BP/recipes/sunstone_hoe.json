@@ -1,0 +1,32 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "cavern:sunstone_hoe"
+    },
+    "unlock": [
+      {
+        "item": "cavern:sunstone"
+      }
+    ],
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "SS ",
+      " T ",
+      " T "
+    ],
+    "key": {
+      "S": {
+        "item": "cavern:sunstone"
+      },
+      "T": {
+        "item": "minecraft:stick"
+      }
+    },
+    "result": {
+      "item": "cavern:sunstone_hoe"
+    }
+  }
+}

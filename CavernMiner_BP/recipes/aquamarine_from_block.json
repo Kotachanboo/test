@@ -1,0 +1,25 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "cavern:aquamarine_from_block"
+    },
+    "unlock": [
+      {
+        "item": "cavern:aquamarine_block"
+      }
+    ],
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "cavern:aquamarine_block"
+      }
+    ],
+    "result": {
+      "item": "cavern:aquamarine",
+      "count": 9
+    }
+  }
+}

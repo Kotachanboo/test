@@ -1,0 +1,25 @@
+{
+  "format_version": "1.26.50",
+  "minecraft:biome": {
+    "description": {
+      "identifier": "cavern:ice_cavern"
+    },
+    "components": {
+      "minecraft:climate": {
+        "temperature": -0.5,
+        "downfall": 0.4
+      },
+      "minecraft:tags": {
+        "tags": [
+          "monster",
+          "overworld",
+          "frozen",
+          "cold",
+          "caves",
+          "cavern",
+          "cavern_ice"
+        ]
+      }
+    }
+  }
+}

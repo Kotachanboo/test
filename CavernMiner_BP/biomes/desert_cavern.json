@@ -1,0 +1,27 @@
+{
+  "format_version": "1.26.50",
+  "minecraft:biome": {
+    "description": {
+      "identifier": "cavern:desert_cavern"
+    },
+    "components": {
+      "minecraft:climate": {
+        "temperature": 2.0,
+        "downfall": 0.0
+      },
+      "minecraft:humidity": {
+        "is_humid": false
+      },
+      "minecraft:tags": {
+        "tags": [
+          "monster",
+          "overworld",
+          "desert",
+          "caves",
+          "cavern",
+          "cavern_desert"
+        ]
+      }
+    }
+  }
+}

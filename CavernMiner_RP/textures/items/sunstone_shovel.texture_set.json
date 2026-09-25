@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "sunstone_shovel",
+    "metalness_emissive_roughness": "sunstone_shovel_mer",
+    "normal": "sunstone_shovel_normal"
+  }
+}

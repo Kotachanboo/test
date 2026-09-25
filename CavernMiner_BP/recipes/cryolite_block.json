@@ -1,0 +1,29 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "cavern:cryolite_block"
+    },
+    "unlock": [
+      {
+        "item": "cavern:cryolite"
+      }
+    ],
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "CCC",
+      "CCC",
+      "CCC"
+    ],
+    "key": {
+      "C": {
+        "item": "cavern:cryolite"
+      }
+    },
+    "result": {
+      "item": "cavern:cryolite_block"
+    }
+  }
+}

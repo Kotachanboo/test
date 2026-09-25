@@ -1,0 +1,15 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:item": {
+    "description": {
+      "identifier": "cavern:aquamarine",
+      "menu_category": {
+        "category": "items"
+      }
+    },
+    "components": {
+      "minecraft:icon": "aquamarine",
+      "minecraft:max_stack_size": 64
+    }
+  }
+}

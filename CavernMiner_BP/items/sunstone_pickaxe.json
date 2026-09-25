@@ -1,0 +1,60 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:item": {
+    "description": {
+      "identifier": "cavern:sunstone_pickaxe",
+      "menu_category": {
+        "category": "equipment"
+      }
+    },
+    "components": {
+      "minecraft:icon": "sunstone_pickaxe",
+      "minecraft:max_stack_size": 1,
+      "minecraft:hand_equipped": true,
+      "minecraft:can_destroy_in_creative": false,
+      "minecraft:damage": 6,
+      "minecraft:durability": {
+        "max_durability": 780
+      },
+      "minecraft:repairable": {
+        "repair_items": [
+          {
+            "items": [
+              "cavern:sunstone"
+            ],
+            "repair_amount": 195
+          }
+        ]
+      },
+      "minecraft:enchantable": {
+        "slot": "pickaxe",
+        "value": 14
+      },
+      "minecraft:tags": {
+        "tags": [
+          "minecraft:is_pickaxe",
+          "minecraft:diamond_tier",
+          "minecraft:is_tool",
+          "minecraft:digger"
+        ]
+      },
+      "minecraft:digger": {
+        "use_efficiency": true,
+        "destroy_speeds": [
+          {
+            "block": {
+              "tags": "q.any_tag('minecraft:is_pickaxe_item_destructible')"
+            },
+            "speed": 8
+          },
+          {
+            "block": {
+              "tags": "q.any_tag('stone','metal','diamond_pick_diggable','iron_pick_diggable','stone_pick_diggable','rail')"
+            },
+            "speed": 8
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "format_version": "1.21.130",
+  "minecraft:client_biome": {
+    "description": {
+      "identifier": "cavern:great_cavern"
+    },
+    "components": {
+      "minecraft:sky_color": {
+        "sky_color": "#05070A"
+      },
+      "minecraft:fog_appearance": {
+        "fog_identifier": "cavern:great_cavern_fog"
+      },
+      "minecraft:water_appearance": {
+        "surface_color": "#1B3A46",
+        "surface_opacity": 0.75
+      }
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "cavern:rich_key"
+    },
+    "tags": [
+      "crafting_table"
+    ],
+    "unlock": [
+      {
+        "item": "cavern:aquamarine"
+      }
+    ],
+    "ingredients": [
+      {
+        "item": "cavern:aquamarine"
+      },
+      {
+        "item": "cavern:magnite_ingot"
+      },
+      {
+        "item": "minecraft:mossy_stone_bricks"
+      }
+    ],
+    "result": {
+      "item": "cavern:rich_key",
+      "count": 1
+    }
+  }
+}

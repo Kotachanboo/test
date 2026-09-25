@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "magnite_ingot",
+    "metalness_emissive_roughness": "magnite_ingot_mer",
+    "normal": "magnite_ingot_normal"
+  }
+}

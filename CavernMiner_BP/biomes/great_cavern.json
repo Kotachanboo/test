@@ -1,0 +1,22 @@
+{
+  "format_version": "1.26.50",
+  "minecraft:biome": {
+    "description": {
+      "identifier": "cavern:great_cavern"
+    },
+    "components": {
+      "minecraft:climate": {
+        "temperature": 0.5,
+        "downfall": 0.0
+      },
+      "minecraft:tags": {
+        "tags": [
+          "monster",
+          "overworld",
+          "caves",
+          "cavern"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,99 @@
+{
+  "resource_pack_name": "great_cavern",
+  "texture_name": "atlas.items",
+  "texture_data": {
+    "aquamarine": {
+      "textures": "textures/items/aquamarine"
+    },
+    "magnite_ingot": {
+      "textures": "textures/items/magnite_ingot"
+    },
+    "raw_magnite": {
+      "textures": "textures/items/raw_magnite"
+    },
+    "hexcite": {
+      "textures": "textures/items/hexcite"
+    },
+    "miner_orb": {
+      "textures": "textures/items/miner_orb"
+    },
+    "cave_key": {
+      "textures": "textures/items/cave_key"
+    },
+    "magnite_pickaxe": {
+      "textures": "textures/items/magnite_pickaxe"
+    },
+    "magnite_axe": {
+      "textures": "textures/items/magnite_axe"
+    },
+    "magnite_shovel": {
+      "textures": "textures/items/magnite_shovel"
+    },
+    "magnite_hoe": {
+      "textures": "textures/items/magnite_hoe"
+    },
+    "magnite_sword": {
+      "textures": "textures/items/magnite_sword"
+    },
+    "rich_key": {
+      "textures": "textures/items/rich_key"
+    },
+    "aquamarine_pickaxe": {
+      "textures": "textures/items/aquamarine_pickaxe"
+    },
+    "aquamarine_axe": {
+      "textures": "textures/items/aquamarine_axe"
+    },
+    "aquamarine_shovel": {
+      "textures": "textures/items/aquamarine_shovel"
+    },
+    "aquamarine_hoe": {
+      "textures": "textures/items/aquamarine_hoe"
+    },
+    "aquamarine_sword": {
+      "textures": "textures/items/aquamarine_sword"
+    },
+    "sunstone": {
+      "textures": "textures/items/sunstone"
+    },
+    "desert_key": {
+      "textures": "textures/items/desert_key"
+    },
+    "sunstone_pickaxe": {
+      "textures": "textures/items/sunstone_pickaxe"
+    },
+    "sunstone_sword": {
+      "textures": "textures/items/sunstone_sword"
+    },
+    "sunstone_axe": {
+      "textures": "textures/items/sunstone_axe"
+    },
+    "sunstone_shovel": {
+      "textures": "textures/items/sunstone_shovel"
+    },
+    "sunstone_hoe": {
+      "textures": "textures/items/sunstone_hoe"
+    },
+    "cryolite": {
+      "textures": "textures/items/cryolite"
+    },
+    "ice_key": {
+      "textures": "textures/items/ice_key"
+    },
+    "cryolite_pickaxe": {
+      "textures": "textures/items/cryolite_pickaxe"
+    },
+    "cryolite_sword": {
+      "textures": "textures/items/cryolite_sword"
+    },
+    "cryolite_axe": {
+      "textures": "textures/items/cryolite_axe"
+    },
+    "cryolite_shovel": {
+      "textures": "textures/items/cryolite_shovel"
+    },
+    "cryolite_hoe": {
+      "textures": "textures/items/cryolite_hoe"
+    }
+  }
+}

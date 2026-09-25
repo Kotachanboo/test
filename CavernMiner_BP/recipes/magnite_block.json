@@ -1,0 +1,29 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "cavern:magnite_block"
+    },
+    "unlock": [
+      {
+        "item": "cavern:magnite_ingot"
+      }
+    ],
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "MMM",
+      "MMM",
+      "MMM"
+    ],
+    "key": {
+      "M": {
+        "item": "cavern:magnite_ingot"
+      }
+    },
+    "result": {
+      "item": "cavern:magnite_block"
+    }
+  }
+}

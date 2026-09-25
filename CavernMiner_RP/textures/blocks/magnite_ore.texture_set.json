@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "magnite_ore",
+    "metalness_emissive_roughness": "magnite_ore_mer",
+    "heightmap": "magnite_ore_height"
+  }
+}

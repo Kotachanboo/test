@@ -1,0 +1,25 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "cavern:magnite_ingot_from_block"
+    },
+    "unlock": [
+      {
+        "item": "cavern:magnite_block"
+      }
+    ],
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "cavern:magnite_block"
+      }
+    ],
+    "result": {
+      "item": "cavern:magnite_ingot",
+      "count": 9
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "format_version": "1.21.100",
+  "minecraft:recipe_furnace": {
+    "description": {
+      "identifier": "cavern:magnite_ingot_from_raw"
+    },
+    "unlock": [
+      {
+        "item": "cavern:raw_magnite"
+      }
+    ],
+    "tags": [
+      "furnace",
+      "blast_furnace"
+    ],
+    "input": "cavern:raw_magnite",
+    "output": "cavern:magnite_ingot"
+  }
+}

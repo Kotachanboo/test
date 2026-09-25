@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "magnite_shovel",
+    "metalness_emissive_roughness": "magnite_shovel_mer",
+    "normal": "magnite_shovel_normal"
+  }
+}

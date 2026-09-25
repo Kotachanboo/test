@@ -1,0 +1,49 @@
+{
+  "format_version": "1.20.20",
+  "sound_definitions": {
+    "music.game.cavern.endless_dark_cave": {
+      "category": "music",
+      "sounds": [
+        {
+          "name": "sounds/music/endless_dark_cave",
+          "stream": true,
+          "volume": 1.0,
+          "load_on_low_memory": false
+        }
+      ]
+    },
+    "music.game.cavern.houjou_cave": {
+      "category": "music",
+      "sounds": [
+        {
+          "name": "sounds/music/houjou_cave",
+          "stream": true,
+          "volume": 1.0,
+          "load_on_low_memory": false
+        }
+      ]
+    },
+    "music.game.cavern.frozen_temple": {
+      "category": "music",
+      "sounds": [
+        {
+          "name": "sounds/music/frozen_temple",
+          "stream": true,
+          "volume": 1.0,
+          "load_on_low_memory": false
+        }
+      ]
+    },
+    "music.game.cavern.sahara": {
+      "category": "music",
+      "sounds": [
+        {
+          "name": "sounds/music/sahara",
+          "stream": true,
+          "volume": 1.0,
+          "load_on_low_memory": false
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "magnite_hoe",
+    "metalness_emissive_roughness": "magnite_hoe_mer",
+    "normal": "magnite_hoe_normal"
+  }
+}

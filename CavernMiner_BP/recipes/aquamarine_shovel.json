@@ -1,0 +1,32 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "cavern:aquamarine_shovel"
+    },
+    "unlock": [
+      {
+        "item": "cavern:aquamarine"
+      }
+    ],
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      " A ",
+      " S ",
+      " S "
+    ],
+    "key": {
+      "A": {
+        "item": "cavern:aquamarine"
+      },
+      "S": {
+        "item": "minecraft:stick"
+      }
+    },
+    "result": {
+      "item": "cavern:aquamarine_shovel"
+    }
+  }
+}

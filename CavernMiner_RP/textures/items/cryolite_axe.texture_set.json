@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "cryolite_axe",
+    "metalness_emissive_roughness": "cryolite_axe_mer",
+    "normal": "cryolite_axe_normal"
+  }
+}

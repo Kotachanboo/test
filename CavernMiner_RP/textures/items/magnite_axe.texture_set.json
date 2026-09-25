@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "magnite_axe",
+    "metalness_emissive_roughness": "magnite_axe_mer",
+    "normal": "magnite_axe_normal"
+  }
+}

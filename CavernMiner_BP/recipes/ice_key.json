@@ -1,0 +1,31 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "cavern:ice_key"
+    },
+    "unlock": [
+      {
+        "item": "cavern:sunstone"
+      }
+    ],
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "cavern:sunstone"
+      },
+      {
+        "item": "minecraft:blue_ice"
+      },
+      {
+        "item": "cavern:aquamarine"
+      }
+    ],
+    "result": {
+      "item": "cavern:ice_key",
+      "count": 1
+    }
+  }
+}

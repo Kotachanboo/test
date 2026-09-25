@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "cryolite_pickaxe",
+    "metalness_emissive_roughness": "cryolite_pickaxe_mer",
+    "normal": "cryolite_pickaxe_normal"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "aquamarine_sword",
+    "metalness_emissive_roughness": "aquamarine_sword_mer",
+    "normal": "aquamarine_sword_normal"
+  }
+}

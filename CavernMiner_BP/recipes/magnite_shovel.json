@@ -1,0 +1,32 @@
+{
+  "format_version": "1.21.100",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "cavern:magnite_shovel"
+    },
+    "unlock": [
+      {
+        "item": "cavern:magnite_ingot"
+      }
+    ],
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      " M ",
+      " S ",
+      " S "
+    ],
+    "key": {
+      "M": {
+        "item": "cavern:magnite_ingot"
+      },
+      "S": {
+        "item": "minecraft:stick"
+      }
+    },
+    "result": {
+      "item": "cavern:magnite_shovel"
+    }
+  }
+}

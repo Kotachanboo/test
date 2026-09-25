@@ -1,0 +1,28 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:fog_settings": {
+    "description": {
+      "identifier": "cavern:great_cavern_fog"
+    },
+    "distance": {
+      "air": {
+        "fog_start": 4,
+        "fog_end": 40,
+        "fog_color": "#0B0E12",
+        "render_distance_type": "fixed"
+      },
+      "water": {
+        "fog_start": 2,
+        "fog_end": 14,
+        "fog_color": "#123047",
+        "render_distance_type": "fixed"
+      },
+      "lava": {
+        "fog_start": 0.2,
+        "fog_end": 1.5,
+        "fog_color": "#CC4415",
+        "render_distance_type": "fixed"
+      }
+    }
+  }
+}

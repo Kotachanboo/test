@@ -1,0 +1,20 @@
+{
+  "format_version": "1.21.130",
+  "minecraft:client_biome": {
+    "description": {
+      "identifier": "cavern:rich_cavern"
+    },
+    "components": {
+      "minecraft:sky_color": {
+        "sky_color": "#070C0E"
+      },
+      "minecraft:fog_appearance": {
+        "fog_identifier": "cavern:rich_cavern_fog"
+      },
+      "minecraft:water_appearance": {
+        "surface_color": "#2A6B72",
+        "surface_opacity": 0.62
+      }
+    }
+  }
+}

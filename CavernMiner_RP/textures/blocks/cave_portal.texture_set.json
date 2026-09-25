@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "cave_portal",
+    "metalness_emissive_roughness": "cave_portal_mer",
+    "heightmap": "cave_portal_height"
+  }
+}

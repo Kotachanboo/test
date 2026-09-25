@@ -1,0 +1,29 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "cavern:sunstone_block"
+    },
+    "unlock": [
+      {
+        "item": "cavern:sunstone"
+      }
+    ],
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "SSS",
+      "SSS",
+      "SSS"
+    ],
+    "key": {
+      "S": {
+        "item": "cavern:sunstone"
+      }
+    },
+    "result": {
+      "item": "cavern:sunstone_block"
+    }
+  }
+}

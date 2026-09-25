@@ -1,0 +1,32 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:block": {
+    "description": {
+      "identifier": "cavern:deepslate_randomite_ore",
+      "menu_category": {
+        "category": "nature"
+      }
+    },
+    "components": {
+      "minecraft:map_color": "#B4A0C8",
+      "minecraft:destructible_by_mining": {
+        "seconds_to_destroy": 4.5
+      },
+      "minecraft:destructible_by_explosion": {
+        "explosion_resistance": 3.0
+      },
+      "minecraft:geometry": "minecraft:geometry.full_block",
+      "minecraft:material_instances": {
+        "*": {
+          "texture": "deepslate_randomite_ore",
+          "render_method": "opaque"
+        }
+      },
+      "minecraft:light_dampening": 15,
+      "minecraft:loot": "loot_tables/empty.json",
+      "minecraft:tags": [
+        "minecraft:is_pickaxe_item_destructible"
+      ]
+    }
+  }
+}

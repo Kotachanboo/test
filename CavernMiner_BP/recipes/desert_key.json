@@ -1,0 +1,31 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:recipe_shapeless": {
+    "description": {
+      "identifier": "cavern:desert_key"
+    },
+    "unlock": [
+      {
+        "item": "cavern:magnite_ingot"
+      }
+    ],
+    "tags": [
+      "crafting_table"
+    ],
+    "ingredients": [
+      {
+        "item": "minecraft:gold_ingot"
+      },
+      {
+        "item": "cavern:magnite_ingot"
+      },
+      {
+        "item": "minecraft:chiseled_sandstone"
+      }
+    ],
+    "result": {
+      "item": "cavern:desert_key",
+      "count": 1
+    }
+  }
+}

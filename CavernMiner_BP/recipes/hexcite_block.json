@@ -1,0 +1,29 @@
+{
+  "format_version": "1.26.30",
+  "minecraft:recipe_shaped": {
+    "description": {
+      "identifier": "cavern:hexcite_block"
+    },
+    "unlock": [
+      {
+        "item": "cavern:hexcite"
+      }
+    ],
+    "tags": [
+      "crafting_table"
+    ],
+    "pattern": [
+      "HHH",
+      "HHH",
+      "HHH"
+    ],
+    "key": {
+      "H": {
+        "item": "cavern:hexcite"
+      }
+    },
+    "result": {
+      "item": "cavern:hexcite_block"
+    }
+  }
+}

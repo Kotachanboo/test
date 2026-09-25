@@ -1,0 +1,8 @@
+{
+  "format_version": "1.16.100",
+  "minecraft:texture_set": {
+    "color": "sunstone_hoe",
+    "metalness_emissive_roughness": "sunstone_hoe_mer",
+    "normal": "sunstone_hoe_normal"
+  }
+}

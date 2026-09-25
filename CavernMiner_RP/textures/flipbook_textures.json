@@ -1,0 +1,26 @@
+[
+  {
+    "flipbook_texture": "textures/blocks/cave_portal",
+    "atlas_tile": "cave_portal",
+    "ticks_per_frame": 2,
+    "blend_frames": true
+  },
+  {
+    "flipbook_texture": "textures/blocks/rich_portal",
+    "atlas_tile": "rich_portal",
+    "ticks_per_frame": 2,
+    "blend_frames": true
+  },
+  {
+    "flipbook_texture": "textures/blocks/desert_portal",
+    "atlas_tile": "desert_portal",
+    "ticks_per_frame": 2,
+    "blend_frames": true
+  },
+  {
+    "flipbook_texture": "textures/blocks/ice_portal",
+    "atlas_tile": "ice_portal",
+    "ticks_per_frame": 2,
+    "blend_frames": true
+  }
+]
