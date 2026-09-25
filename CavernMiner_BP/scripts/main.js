@@ -54,7 +54,10 @@ const GEN_RADIUS = 4;
  */
 const AREA_MARGIN = 1;
 
-/** 進行方向へ何チャンク先読みするか。AREA_MARGIN を超えないこと */
+/**
+ * 進行方向へ何チャンク先読みするか。
+ * tickingarea の外に出るぶんは積まない (ロードされていないので作れない)。
+ */
 const LOOK_AHEAD = 3;
 
 /** そのディメンションの生成範囲 */
@@ -174,7 +177,9 @@ class DimState {
     this.h = 128;
     this.deepslateY = 0;
 
-    this.areaChunk = null;
+    this.areaChunk = null;   // tickingarea の中心チャンク
+    this.areaR = 0;          // その半径
+    this.areaSlot = null;    // いま張っている名前 ("a" / "b")
 
     this.regionCache = new Map();
   }
@@ -963,7 +968,9 @@ function* generateChunk(st, buf, cx, cz) {
     // ロードを待つ。ワーカーは4本あるので、1本詰まっても全体は止まらない。
     // ここで後ろへ回すと、順番が来る頃には巡回が同じチャンクを積み直していて
     // 同じ場所を延々と往復することになる。
-    if (!(yield* waitForChunk(st, dim, x0 + 8, z0 + 8, 30))) {
+    // tickingarea の外 (プレイヤーの近くだけ許している) は長く待たない
+    const waitTicks = inArea(st, cx, cz) ? 30 : 5;
+    if (!(yield* waitForChunk(st, dim, x0 + 8, z0 + 8, waitTicks))) {
       reportSkip(cx, cz, "未ロード");
       return;   // 記録しないので、必要になれば巡回が積み直す
     }
@@ -1498,30 +1505,80 @@ function faceBit(face) {
 
 const AREA_TAG_PREFIX = "gcarea_";
 
+/** プレイヤーがこれだけ中心から離れたら tickingarea を張り替える */
+const AREA_RECENTER = 2;
+
+/**
+ * tickingarea の半径 (チャンク)。生成範囲 + 余白。
+ * 以前は先回りのぶんで1周以上広がり、大空洞 (半径6) では 17x17 = 289 チャンクを
+ * 強制ロードしていた。上の説明どおりの大きさに戻す。
+ */
+function areaRadiusOf(st) {
+  return radiusOf(st) + AREA_MARGIN;
+}
+
+/** 張り替えで交互に使う名前。旧版の1枚目 (接尾辞なし) も掃除の対象 */
+function areaTag(st, slot) {
+  return slot ? `${AREA_TAG_PREFIX}${st.cfg.short}_${slot}` : `${AREA_TAG_PREFIX}${st.cfg.short}`;
+}
+
+/** そのチャンクが tickingarea の中か */
+function inArea(st, cx, cz) {
+  const a = st.areaChunk;
+  if (!a) return false;
+  return Math.max(Math.abs(cx - a.cx), Math.abs(cz - a.cz)) <= st.areaR;
+}
+
+function runOk(dim, cmd) {
+  try {
+    const r = dim.runCommand(cmd);
+    return !r || r.successCount === undefined || r.successCount > 0;
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
+ * tickingarea を張る。
+ *
+ * 以前は「外してから張る」だったので、張り替えるたびに全チャンクが
+ * いったんアンロードされ、生成中のチャンクが「途中で消失」していた。
+ * 名前を2つ交互に使い、新しいほうを張ってから古いほうを外す。
+ * 重なっている部分はロードされたまま残る。
+ *
+ * 大きさは固定にした。以前は先回りの進み具合で広がり、放置したあとに
+ * 張り替えると 17x17 = 289 チャンクになって読み込みが追いつかなかった。
+ */
 function ensureArea(st, dim, pcx, pcz, force) {
-  if (st.areaChunk) {
-    // 張り替えると生成中のチャンクがアンロードされて彫りが失敗する
+  const r = areaRadiusOf(st);
+  if (st.areaChunk && !force) {
     const d = Math.max(Math.abs(st.areaChunk.cx - pcx), Math.abs(st.areaChunk.cz - pcz));
-    if (!force && d < 3) return;
+    if (d < AREA_RECENTER) return;
   }
 
-  // 先回りしているぶんも覆う。tickingarea は1枚に保つ
-  // (複数枚重ねると強制ロードが一気に膨れてロードが破綻する)
-  const ps = preState.get(st.cfg.id);
-  const pre = ps ? Math.min(PRE_RADIUS_MAX, ps.r) : 0;
-  const r = Math.max(radiusOf(st) + AREA_MARGIN, pre + 1);
-  const tag = AREA_TAG_PREFIX + st.cfg.short;
+  const next = st.areaSlot === "a" ? "b" : "a";
   const x1 = (pcx - r) * 16, z1 = (pcz - r) * 16;
   const x2 = (pcx + r) * 16 + 15, z2 = (pcz + r) * 16 + 15;
 
-  try { dim.runCommand(`tickingarea remove ${tag}`); } catch (e) { /* noop */ }
-  try {
-    dim.runCommand(`tickingarea add ${x1} ${st.yMin} ${z1} ${x2} ${st.yMax} ${z2} ${tag}`);
-    st.areaChunk = { cx: pcx, cz: pcz };
-  } catch (e) {
-    console.warn(`[CavernMiner] tickingarea add failed: ${e}`);
-    st.areaChunk = null;
+  runOk(dim, `tickingarea remove ${areaTag(st, next)}`);   // 前回の残り
+  if (!runOk(dim, `tickingarea add ${x1} ${st.yMin} ${z1} ${x2} ${st.yMax} ${z2} ${areaTag(st, next)}`)) {
+    console.warn(`[CavernMiner] ${st.cfg.name}: tickingarea を張れませんでした`);
+    return;   // 古いほうが残っていればそれを使い続ける
   }
+  if (st.areaSlot) runOk(dim, `tickingarea remove ${areaTag(st, st.areaSlot)}`);
+  st.areaSlot = next;
+  st.areaChunk = { cx: pcx, cz: pcz };
+  st.areaR = r;
+}
+
+/** 誰もいなくなった洞窟の tickingarea を外す。残すと無人のまま読み込み続ける */
+function releaseArea(st) {
+  if (!st.areaSlot) return;
+  try {
+    runOk(world.getDimension(st.cfg.id), `tickingarea remove ${areaTag(st, st.areaSlot)}`);
+  } catch (e) { /* noop */ }
+  st.areaSlot = null;
+  st.areaChunk = null;
 }
 
 /**
@@ -1610,10 +1667,9 @@ function preGenerate(st, pcx, pcz) {
   if (moved) {
     ps = { cx: pcx, cz: pcz, r: radiusOf(st) + 1 };
     preState.set(st.cfg.id, ps);
-    const dim = caveDim(st.cfg.id);
-    if (dim) ensureArea(st, dim, pcx, pcz, true);
   }
-  if (ps.r > PRE_RADIUS_MAX) return;
+  // tickingarea の外はロードされていないので積んでも飛ばされるだけ
+  if (ps.r > Math.min(PRE_RADIUS_MAX, st.areaR ?? 0)) return;
 
   const r = ps.r;
   let added = 0;
@@ -1621,7 +1677,7 @@ function preGenerate(st, pcx, pcz) {
     for (let dz = -r; dz <= r; dz++) {
       if (Math.abs(dx) !== r && Math.abs(dz) !== r) continue;   // 外周だけ
       const cx = ps.cx + dx, cz = ps.cz + dz;
-      if (isGenerated(st, cx, cz)) continue;
+      if (!inArea(st, cx, cz) || isGenerated(st, cx, cz)) continue;
       enqueue(st, cx, cz, false);
       added++;
     }
@@ -1629,72 +1685,129 @@ function preGenerate(st, pcx, pcz) {
   ps.r++;
 }
 
-function scan() {
+/**
+ * 洞窟にいるプレイヤーを、ディメンションごとにまとめる。
+ * 向いている方向 (水平の単位ベクトル) も一緒に持っておく。
+ */
+function playersByDim() {
+  const out = new Map();
   for (const player of world.getAllPlayers()) {
     const st = stateOf(player.dimension.id);
     if (!st) continue;
-
-    const pcx = Math.floor(player.location.x / 16);
-    const pcz = Math.floor(player.location.z / 16);
-    ensureArea(st, player.dimension, pcx, pcz, false);
-
-    // 進んでいる方向を優先する。狭い範囲では、向いている先が
-    // 間に合っているかどうかが体感をほぼ決める。
     let vx = 0, vz = 0;
     try {
       const v = player.getViewDirection();
       const len = Math.hypot(v.x, v.z);
       if (len > 0.01) { vx = v.x / len; vz = v.z / len; }
     } catch (e) { /* noop */ }
+    const info = {
+      player, vx, vz,
+      pcx: Math.floor(player.location.x / 16),
+      pcz: Math.floor(player.location.z / 16),
+    };
+    if (!out.has(st.cfg.id)) out.set(st.cfg.id, { st, players: [] });
+    out.get(st.cfg.id).players.push(info);
+  }
+  return out;
+}
+
+/**
+ * そのチャンクを今作ってよいか。
+ * tickingarea の中か、誰かのすぐ近く (プレイヤー自身が読み込んでいる範囲)。
+ * それ以外はロードされていないので、積んでも30tick待って飛ばされるだけ。
+ */
+function reachable(st, players, cx, cz) {
+  if (inArea(st, cx, cz)) return true;
+  for (const p of players) {
+    if (Math.max(Math.abs(cx - p.pcx), Math.abs(cz - p.pcz)) <= 2) return true;
+  }
+  return false;
+}
+
+/**
+ * 優先度。小さいほど先に作る。
+ * 一番近いプレイヤーからの距離で決め、向いている先を少し前に出す。
+ * 構造物は周りの地形より後でよいので後ろへ回す。
+ */
+function priorityOf(item, players) {
+  const [, cx, cz, , deco] = item;
+  let best = Infinity;
+  for (const p of players) {
+    const dx = cx - p.pcx, dz = cz - p.pcz;
+    const d2 = dx * dx + dz * dz;
+    const ahead = d2 > 0 ? (dx * p.vx + dz * p.vz) / Math.sqrt(d2) : 1;
+    const v = d2 - ahead * 4.0;
+    if (v < best) best = v;
+  }
+  return deco ? best + 6 : best;
+}
+
+function scan() {
+  const groups = playersByDim();
+
+  for (const { st, players } of groups.values()) {
+    const lead = players[0];
+    // tickingarea は1ディメンションに1枚。先頭のプレイヤーに合わせる。
+    // 以前はプレイヤーごとに張り直していたので、同じ洞窟に離れた2人が
+    // いると毎回張り替わって、どちらの周りも生成できなかった
+    ensureArea(st, lead.player.dimension, lead.pcx, lead.pcz, false);
 
     // 進行方向は円の外側まで先読みする。止まってから作り始めると間に合わない
     const R = radiusOf(st);
-    const LOOK = LOOK_AHEAD;
-    const cand = [];
-    for (let dx = -R - LOOK; dx <= R + LOOK; dx++) {
-      for (let dz = -R - LOOK; dz <= R + LOOK; dz++) {
-        const d2 = dx * dx + dz * dz;
-        const d = Math.sqrt(d2) || 1;
-        const ahead = (dx * vx + dz * vz) / d;      // -1(後ろ) 〜 1(前)
-        // 前方は半径 + LOOK まで、後方は半径までを対象にする
-        const reach = R + Math.max(0, ahead) * LOOK;
-        if (d > reach) continue;
-        cand.push([d2 - ahead * 4.0, pcx + dx, pcz + dz]);
+    for (const p of players) {
+      const cand = [];
+      for (let dx = -R - LOOK_AHEAD; dx <= R + LOOK_AHEAD; dx++) {
+        for (let dz = -R - LOOK_AHEAD; dz <= R + LOOK_AHEAD; dz++) {
+          const d2 = dx * dx + dz * dz;
+          const d = Math.sqrt(d2) || 1;
+          const ahead = (dx * p.vx + dz * p.vz) / d;   // -1(後ろ) 〜 1(前)
+          // 前方は半径 + LOOK まで、後方は半径までを対象にする
+          const reach = R + Math.max(0, ahead) * LOOK_AHEAD;
+          if (d > reach) continue;
+          const cx = p.pcx + dx, cz = p.pcz + dz;
+          if (!reachable(st, players, cx, cz)) continue;
+          cand.push([d2 - ahead * 4.0, cx, cz]);
+        }
+      }
+      cand.sort((a, b) => a[0] - b[0]);
+      for (const [, cx, cz] of cand) enqueue(st, cx, cz, false);
+
+      // 構造物の積み残しを拾う。無人になって捨てられたり、ロード待ちで
+      // 諦めたりしたものは、周りの生成が終わっているので二度と積まれない
+      if (st.cfg.structures && gQueue.length < WORKERS) {
+        for (const [, cx, cz] of cand) enqueueDecoration(st, cx, cz);
+      }
+
+      // 足元がまだ生成されていないなら、そこを最優先にして足止めする。
+      // 生成より速く歩けると、未生成の空間に出てしまう。
+      if (!isGenerated(st, p.pcx, p.pcz) || isBuilding(st, p.pcx, p.pcz)) {
+        enqueue(st, p.pcx, p.pcz, true);
+        holdBack(st, p.player);
+      } else {
+        unfreeze(p.player);
       }
     }
-    cand.sort((a, b) => a[0] - b[0]);
-    for (const [, cx, cz] of cand) enqueue(st, cx, cz, false);
+  }
 
-    // 構造物の積み残しを拾う。無人になって捨てられたり、ロード待ちで
-    // 諦めたりしたものは、周りの生成が終わっているので二度と積まれない
-    if (st.cfg.structures && gQueue.length < WORKERS) {
-      for (const [, cx, cz] of cand) enqueueDecoration(st, cx, cz);
-    }
+  // キューを整理する。移動して届かなくなったものは捨てる (近づけばまた積まれる)。
+  // 残りはプレイヤーに近い順に並べ直す。以前は最後に見たプレイヤー基準の
+  // 並べ替えだけで、遠くの古いチャンクが溜まって100件を超えていた
+  for (let i = gQueue.length - 1; i >= 0; i--) {
+    const item = gQueue[i];
+    const g = groups.get(item[0].cfg.id);
+    if (g && reachable(item[0], g.players, item[1], item[2])) continue;
+    gQueued.delete(item[3]);
+    gQueue.splice(i, 1);
+  }
+  if (gQueue.length > 1) {
+    const pri = new Map();
+    for (const item of gQueue) pri.set(item[3], priorityOf(item, groups.get(item[0].cfg.id).players));
+    gQueue.sort((a, b) => pri.get(a[3]) - pri.get(b[3]));
+  }
 
-    // 積んだあとに近い順へ並べ替える。移動すると古い遠方のチャンクが
-    // 先頭に残り、足元が後回しになってしまう
-    if (gQueue.length > 1) {
-      gQueue.sort((a, b) => {
-        const da = Math.max(Math.abs(a[1] - pcx), Math.abs(a[2] - pcz));
-        const db = Math.max(Math.abs(b[1] - pcx), Math.abs(b[2] - pcz));
-        return da - db;
-      });
-    }
-
-    // 足元がまだ生成されていないなら、そこを最優先にして足止めする。
-    // 生成より速く歩けると、未生成の空間に出てしまう。
-    const here = isGenerated(st, pcx, pcz);
-    const onBuilding = isBuilding(st, pcx, pcz);
-
-    if (!here || onBuilding) {
-      enqueue(st, pcx, pcz, true);
-      holdBack(st, player);
-    } else {
-      unfreeze(player);
-    }
-
-    // 手が空いていれば外側を先回りして作る
-    preGenerate(st, pcx, pcz);
+  // 手が空いていれば外側を先回りして作る
+  for (const { st, players } of groups.values()) {
+    preGenerate(st, players[0].pcx, players[0].pcz);
   }
   pump();
 }
@@ -2042,6 +2155,12 @@ function purgeEmptyQueues() {
     }
   }
   if (dropped > 0) console.warn(`[CavernMiner] 誰もいない洞窟の生成待ちを ${dropped} 件破棄`);
+  for (const st of STATES.values()) {
+    if (!occupied.has(st.cfg.id)) {
+      releaseArea(st);
+      preState.delete(st.cfg.id);
+    }
+  }
 }
 
 /** 地上へ戻す */
@@ -2169,9 +2288,9 @@ function diag(player, dimId) {
   const ps = preState.get(st.cfg.id);
   player.sendMessage(`§7先回り: §f${ps ? `半径 ${Math.min(PRE_RADIUS_MAX, ps.r)}／${PRE_RADIUS_MAX}` : "未開始"}`);
   const R = radiusOf(st);
-  const load = (2 * (R + AREA_MARGIN) + 1) ** 2;
+  const load = (2 * areaRadiusOf(st) + 1) ** 2;
   player.sendMessage(`§7生成半径: §f${R} §7/ 強制ロード §f${load}§7チャンク`);
-  player.sendMessage(`§7tickingarea: §f${st.areaChunk ? `${st.areaChunk.cx},${st.areaChunk.cz} 中心` : "§c張れていません"}`);
+  player.sendMessage(`§7tickingarea: §f${st.areaChunk ? `${st.areaChunk.cx},${st.areaChunk.cz} 中心 (${areaTag(st, st.areaSlot)})` : "§c張れていません"}`);
 }
 
 function probe(player) {
@@ -2346,12 +2465,16 @@ world.afterEvents.entityDie.subscribe((ev) => {
   if (e?.typeId === "minecraft:player") unfreeze(e);
 });
 
-// 旧バージョンが張った tickingarea が残っていると上限を圧迫する
+// 前回や旧バージョンが張った tickingarea が残っていると上限を圧迫する。
+// 誰も居ない洞窟を読み込み続ける原因にもなる
 system.run(() => {
-  for (const cfg of DIMENSIONS) {
-    try {
-      world.getDimension(cfg.id).runCommand("tickingarea remove gc_area");
-    } catch (e) { /* 無ければそれでいい */ }
+  for (const st of STATES.values()) {
+    let dim;
+    try { dim = world.getDimension(st.cfg.id); } catch (e) { continue; }
+    for (const tag of ["gc_area", areaTag(st), areaTag(st, "a"), areaTag(st, "b")]) {
+      if (tag === areaTag(st, st.areaSlot) && st.areaSlot) continue;   // 既に張り直したもの
+      runOk(dim, `tickingarea remove ${tag}`);
+    }
   }
 });
 
@@ -2360,13 +2483,16 @@ system.run(() => {
  * 本来は重い処理を分割して避けるべきで、これは最後の砦。
  * 止められると以降の生成が全部止まり、洞窟に閉じ込められる。
  */
-try {
-  system.beforeEvents.watchdogTerminate.subscribe((ev) => {
-    ev.cancel = true;
-    console.warn(`[CavernMiner] 処理が重くなりました (${ev.terminateReason})。停止は回避しました`);
-  });
-} catch (e) {
-  console.warn(`[CavernMiner] ウォッチドッグの回避を登録できません: ${e}`);
+// @minecraft/server 2.x の安定版にはこのイベントが無い (ベータ API のみ)。
+// 無い環境では登録しないだけで、警告は出さない
+const watchdogEvent = system.beforeEvents?.watchdogTerminate;
+if (watchdogEvent) {
+  try {
+    watchdogEvent.subscribe((ev) => {
+      ev.cancel = true;
+      console.warn(`[CavernMiner] 処理が重くなりました (${ev.terminateReason})。停止は回避しました`);
+    });
+  } catch (e) { /* noop */ }
 }
 
 registerOreDrops();
