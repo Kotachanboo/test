@@ -370,7 +370,7 @@ function regionKey(st, cx, cz) {
   return `${st.cfg.short}:${cx >> REGION_SHIFT},${cz >> REGION_SHIFT}`;
 }
 
-function loadRegion(st, key) {
+function readBits(st, key) {
   let arr = st.regionCache.get(key);
   if (arr) return arr;
   const raw = world.getDynamicProperty(key);
@@ -378,6 +378,26 @@ function loadRegion(st, key) {
     ? raw.split("")
     : new Array(REGION_CHARS).fill("A");
   st.regionCache.set(key, arr);
+  return arr;
+}
+
+/** 地形の記録と同じ領域の、構造物の記録のキー ("rc:1,2" → "rc:d:1,2") */
+function decoKeyOf(terrainKey) {
+  const i = terrainKey.indexOf(":");
+  return `${terrainKey.slice(0, i)}:d:${terrainKey.slice(i + 1)}`;
+}
+
+function loadRegion(st, key) {
+  const cached = st.regionCache.get(key);
+  if (cached) return cached;
+  const arr = readBits(st, key);
+  // 構造物の記録が無い領域は、構造物を後回しにする前の版で作られたもの。
+  // そこで生成済みのチャンクは構造物も置き済みなので、同じ内容で記録を作る。
+  // 地形の記録を初めて読むこの時点なら、まだ今の版では何も生成していない。
+  const dk = decoKeyOf(key);
+  if (world.getDynamicProperty(dk) === undefined) {
+    world.setDynamicProperty(dk, arr.join(""));
+  }
   return arr;
 }
 
@@ -400,6 +420,26 @@ function markGenerated(st, cx, cz) {
   const ci = Math.floor(bi / 6);
   arr[ci] = B64[B64.indexOf(arr[ci]) | (1 << (bi % 6))];
   world.setDynamicProperty(key, arr.join(""));
+}
+
+/** 構造物を置き終えたか */
+function isDecorated(st, cx, cz) {
+  const key = regionKey(st, cx, cz);
+  loadRegion(st, key);   // 旧版の記録からの引き継ぎを先に済ませる
+  const arr = readBits(st, decoKeyOf(key));
+  const bi = bitIndex(cx, cz);
+  return (B64.indexOf(arr[Math.floor(bi / 6)]) & (1 << (bi % 6))) !== 0;
+}
+
+function markDecorated(st, cx, cz) {
+  const key = regionKey(st, cx, cz);
+  loadRegion(st, key);
+  const dk = decoKeyOf(key);
+  const arr = readBits(st, dk);
+  const bi = bitIndex(cx, cz);
+  const ci = Math.floor(bi / 6);
+  arr[ci] = B64[B64.indexOf(arr[ci]) | (1 << (bi % 6))];
+  world.setDynamicProperty(dk, arr.join(""));
 }
 
 const PROP_SIGNATURE = "gc:signature";   // 旧形式 (全ディメンション共通)
@@ -873,6 +913,45 @@ const NEIGHBORS4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 /** 彫る区間が開いていないことの印 */
 const NO_RUN = -Infinity;
 
+/**
+ * 空洞に面した岩の一覧 (x, y, z を平たく並べたもの)。
+ * 鉱脈・床の雪・構造物の置き場所に使う。構造物は地形とは別の時に置くので、
+ * 密度から同じものを作り直せるよう関数に分けてある。
+ */
+function collectWallSpots(st, src, x0, z0) {
+  const spots = [];
+  for (let lx = 0; lx < 16; lx++) {
+    for (let lz = 0; lz < 16; lz++) {
+      const base = ((lx + PAD) * SW + (lz + PAD)) * MAX_H;
+      let open = false;
+      for (let y = st.yMin + 1; y <= st.yMax - 1; y++) {
+        if (src[base + (y - st.yMin)]) {
+          if (!open) {
+            open = true;
+            spots.push(x0 + lx, y - 1, z0 + lz);
+          }
+        } else if (open) {
+          open = false;
+          spots.push(x0 + lx, y, z0 + lz);
+        }
+      }
+    }
+  }
+  return spots;
+}
+
+/** 密度のバッファから「そこは岩か」を引く関数を作る */
+function solidTester(st, src, x0, z0) {
+  return (wx, wy, wz) => {
+    const lx = wx - x0 + PAD;
+    const lz = wz - z0 + PAD;
+    if (lx < 0 || lx >= SW || lz < 0 || lz >= SW) return false;
+    if (wy < st.yMin || wy > st.yMax) return false;
+    // ストライドは MAX_H。h を使うと別の高さを読み、空中に鉱石が置かれる
+    return src[(lx * SW + lz) * MAX_H + (wy - st.yMin)] === 0;
+  };
+}
+
 function* generateChunk(st, buf, cx, cz) {
   const dim = caveDim(st.cfg.id);
   if (!dim) return;
@@ -918,7 +997,7 @@ function* generateChunk(st, buf, cx, cz) {
     //    矩形にまとめると56回まで減る (実測で58%削減)。
     const carveMin = st.yMin + 1;
     const carveMax = st.yMax - 1;
-    const wallSpots = [];
+    const wallSpots = collectWallSpots(st, src, x0, z0);
     const hasFluid = !!st.cfg.fluids;
     const contained = hasFluid ? fluidContainment(st, buf, src, x0, z0) : null;
     const rockAt = (y) => (y < st.deepslateY ? st.blocks.deepslate : st.blocks.stone);
@@ -976,13 +1055,9 @@ function* generateChunk(st, buf, cx, cz) {
 
         for (let y = carveMin; y <= carveMax; y++) {
           if (src[base + (y - st.yMin)]) {
-            if (runStart === NO_RUN) {
-              runStart = y;
-              if (y - 1 >= st.yMin) wallSpots.push(wx, y - 1, wz);
-            }
+            if (runStart === NO_RUN) runStart = y;
           } else if (runStart !== NO_RUN) {
             closeRun(y - 1);
-            wallSpots.push(wx, y, wz);
           }
         }
         closeRun(carveMax);
@@ -1026,14 +1101,7 @@ function* generateChunk(st, buf, cx, cz) {
     protectInside(st, dim, cx, cz);   // 彫ったあとも念のため確保
     yield;
 
-    const isSolid = (wx, wy, wz) => {
-      const lx = wx - x0 + PAD;
-      const lz = wz - z0 + PAD;
-      if (lx < 0 || lx >= SW || lz < 0 || lz >= SW) return false;
-      if (wy < st.yMin || wy > st.yMax) return false;
-      // ストライドは MAX_H。h を使うと別の高さを読み、空中に鉱石が置かれる
-      return src[(lx * SW + lz) * MAX_H + (wy - st.yMin)] === 0;
-    };
+    const isSolid = solidTester(st, src, x0, z0);
 
     // 彫ったあとは岩のはずの点だけを見る (大空洞のチャンクを誤って弾かない)
     if (!verifyFilled(st, dim, x0, z0, isSolid)) {
@@ -1104,11 +1172,7 @@ function* generateChunk(st, buf, cx, cz) {
       yield;
     }
 
-    // 9. 構造物
-    if (st.cfg.structures) {
-      yield* placeStructures(structureCtx(st, dim, cx, cz, x0, z0, wallSpots, isSolid),
-                             st.cfg.structures, SEED);
-    }
+    // 9. 構造物はここでは置かない (decorateChunk で周りが揃ってから置く)
     yield;
 
     if (!verifyFilled(st, dim, x0, z0, isSolid)) {
@@ -1116,6 +1180,7 @@ function* generateChunk(st, buf, cx, cz) {
       return;
     }
     markGenerated(st, cx, cz);
+    queueDecorationAround(st, cx, cz);
 
     try {
       restorePortals(st.cfg.id, cx, cz, dim,
@@ -1123,6 +1188,76 @@ function* generateChunk(st, buf, cx, cz) {
     } catch (e) { /* noop */ }
   } catch (e) {
     console.warn(`[CavernMiner] chunk ${cx},${cz}: ${e}`);
+  }
+}
+
+// ===========================================================================
+// 構造物 (地形とは別の工程)
+// ===========================================================================
+
+/**
+ * 構造物は、そのチャンクと周囲8チャンクの地形が揃ってから置く。
+ *
+ * ジオードや部屋は最大7マスほど隣のチャンクへはみ出す。地形と同時に
+ * 置いていた頃は、あとから隣を生成したときに
+ *   - 母岩の充填でジオードの中の空洞が石で埋まる
+ *   - 隣の洞窟がジオードの殻や部屋の壁を彫り抜く
+ *   - 隣の鉱脈や深層岩の斑が殻を置き換える
+ * といった形で上書きされていた (生成順しだいで約4割のジオードが欠けた)。
+ * 周りが全部できてから置けば、あとから地形に踏まれることは無い。
+ * 本家マイクラが地形と地物を別の段階で置くのと同じ考え方。
+ */
+function neighborsReady(st, cx, cz) {
+  for (let dx = -1; dx <= 1; dx++) {
+    for (let dz = -1; dz <= 1; dz++) {
+      if (!isGenerated(st, cx + dx, cz + dz)) return false;
+    }
+  }
+  return true;
+}
+
+function dkey(st, cx, cz) { return `${st.cfg.short}:d:${cx},${cz}`; }
+
+/** 構造物を置ける状態なら積む */
+function enqueueDecoration(st, cx, cz) {
+  if (!st.cfg.structures) return;
+  const k = dkey(st, cx, cz);
+  if (gQueued.has(k) || building.has(k)) return;
+  if (isDecorated(st, cx, cz) || !neighborsReady(st, cx, cz)) return;
+  // 上限で捨てると二度と積まれない場所が出るので、上限は見ない
+  gQueued.add(k);
+  gQueue.push([st, cx, cz, k, true]);
+}
+
+/** 生成し終えたチャンクと、それで周りが揃った隣を積む */
+function queueDecorationAround(st, cx, cz) {
+  for (let dx = -1; dx <= 1; dx++) {
+    for (let dz = -1; dz <= 1; dz++) enqueueDecoration(st, cx + dx, cz + dz);
+  }
+}
+
+function* decorateChunk(st, buf, cx, cz) {
+  const dim = caveDim(st.cfg.id);
+  if (!dim || !st.cfg.structures) return;
+  if (isDecorated(st, cx, cz) || !neighborsReady(st, cx, cz)) return;
+
+  const x0 = cx * 16;
+  const z0 = cz * 16;
+  try {
+    if (!(yield* waitForChunk(st, dim, x0 + 8, z0 + 8, 30))) return;
+
+    // 置き場所は地形と同じ密度から求め直す。ブロックを読むより速く、結果も同じ
+    yield* fillDensity(st, buf, x0, z0);
+    if (st.field.smooth) yield* smoothPass(st, buf);
+    const src = st.field.smooth ? buf.b : buf.a;
+    const isSolid = solidTester(st, src, x0, z0);
+    const wallSpots = collectWallSpots(st, src, x0, z0);
+
+    yield* placeStructures(structureCtx(st, dim, cx, cz, x0, z0, wallSpots, isSolid),
+                           st.cfg.structures, SEED);
+    markDecorated(st, cx, cz);
+  } catch (e) {
+    console.warn(`[CavernMiner] structures ${cx},${cz}: ${e}`);
   }
 }
 
@@ -1151,11 +1286,16 @@ function structureCtx(st, dim, cx, cz, x0, z0, wallSpots, isSolid) {
       fillSafe(st, dim, x1, y1, z1, x2, y2, z2, block),
 
     placeLichen: (x, y, z, face) => {
+      // 置き場所は密度から選ぶので、隣の構造物がそこにあっても分からない。
+      // 空気のときだけ生やし、ジオードの殻や部屋の壁を上書きしない
+      let block;
+      try { block = dim.getBlock({ x, y, z }); } catch (e) { return; }
+      if (!block || block.typeId !== BLOCK_AIR) return;
       try {
         const perm = BlockPermutation.resolve("minecraft:glow_lichen", {
           multi_face_direction_bits: faceBit(face),
         });
-        dim.getBlock({ x, y, z })?.setPermutation(perm);
+        block.setPermutation(perm);
       } catch (e) {
         setSafe(st, dim, x, y, z, "minecraft:glow_lichen");
       }
@@ -1422,12 +1562,13 @@ function enqueue(st, cx, cz, front) {
 function* worker(buf) {
   try {
     while (gQueue.length > 0) {
-      const [st, cx, cz, k] = gQueue.shift();
+      const [st, cx, cz, k, deco] = gQueue.shift();
       gQueued.delete(k);
 
       building.add(k);
       try {
-        yield* generateChunk(st, buf, cx, cz);
+        if (deco) yield* decorateChunk(st, buf, cx, cz);
+        else yield* generateChunk(st, buf, cx, cz);
       } catch (e) {
         console.warn(`[CavernMiner] chunk ${k} failed: ${e}`);
       } finally {
@@ -1523,6 +1664,12 @@ function scan() {
     }
     cand.sort((a, b) => a[0] - b[0]);
     for (const [, cx, cz] of cand) enqueue(st, cx, cz, false);
+
+    // 構造物の積み残しを拾う。無人になって捨てられたり、ロード待ちで
+    // 諦めたりしたものは、周りの生成が終わっているので二度と積まれない
+    if (st.cfg.structures && gQueue.length < WORKERS) {
+      for (const [, cx, cz] of cand) enqueueDecoration(st, cx, cz);
+    }
 
     // 積んだあとに近い順へ並べ替える。移動すると古い遠方のチャンクが
     // 先頭に残り、足元が後回しになってしまう
