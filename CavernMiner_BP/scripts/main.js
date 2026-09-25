@@ -19,6 +19,7 @@ import { registerPortal, setTravelHandlers, saveReturn, loadReturn,
          buildReturnPortal, restorePortals } from "./portal.js";
 import { registerMusic, skipTrack } from "./music.js";
 import { registerAquamarine } from "./aquamarine.js";
+import { registerMobs } from "./mobs.js";
 import { placeStructures, fillChest, prng, mix } from "./structures.js";
 
 // ===========================================================================
@@ -2409,36 +2410,6 @@ system.runInterval(() => {
 world.afterEvents.playerLeave.subscribe((ev) => frozenPlayers.delete(ev.playerId));
 
 /**
- * バイオームに合わせてモブを置き換える。
- *
- * ハスクやストレイは「空が見える場所」でしか湧かない。砂漠でも地下は
- * 普通のゾンビになる。洞窟は天井が岩盤なので、desert や frozen の
- * タグを付けても永久に湧かない。湧いた直後にこちらで差し替える。
- */
-const MOB_SWAP = {
-  "cavern:desert_cavern": { "minecraft:zombie": "minecraft:husk" },
-  "cavern:ice_cavern": { "minecraft:skeleton": "minecraft:stray" },
-};
-
-world.afterEvents.entitySpawn.subscribe((ev) => {
-  const e = ev.entity;
-  let table;
-  try { table = MOB_SWAP[e.dimension.id]; } catch (err) { return; }
-  const to = table?.[e.typeId];
-  if (!to) return;
-
-  const dim = e.dimension;
-  const at = e.location;
-  system.run(() => {
-    try {
-      if (!e.isValid) return;
-      e.remove();
-      dim.spawnEntity(to, at);
-    } catch (err) { /* noop */ }
-  });
-});
-
-/**
  * 説明書はワールドに初めて参加したときに渡す。
  * 中身は鍵の作り方と洞窟への入り方なので、入ったあとに渡しても遅い。
  * 参加直後は持ち物の準備が整っていないことがあるので少し待つ。
@@ -2500,6 +2471,7 @@ registerMiner();
 registerAssist();
 registerPortal();
 registerAquamarine();
+registerMobs();
 setTravelHandlers((p, target) => enter(p, target), goHome);
 if (MUSIC) registerMusic();
 system.runInterval(scan, SCAN_INTERVAL);
