@@ -104,3 +104,5 @@ entity.cavern:blue_spider.name=ブルースパイダー
 item.spawn_egg.entity.cavern:blue_spider.name=ブルースパイダーのスポーンエッグ
 entity.cavern:desert_spider.name=砂漠グモ
 item.spawn_egg.entity.cavern:desert_spider.name=砂漠グモのスポーンエッグ
+entity.cavern:scorpion.name=サソリ
+item.spawn_egg.entity.cavern:scorpion.name=サソリのスポーンエッグ

@@ -57,6 +57,26 @@
           1.2
         ],
         "volume": 1
+      },
+      "cavern:scorpion": {
+        "events": {
+          "ambient": "mob.spider.say",
+          "death": "mob.spider.death",
+          "hurt": "mob.spider.say",
+          "step": {
+            "pitch": [
+              1.2,
+              1.4
+            ],
+            "sound": "mob.spider.step",
+            "volume": 0.3
+          }
+        },
+        "pitch": [
+          0.6,
+          0.75
+        ],
+        "volume": 0.9
       }
     }
   }

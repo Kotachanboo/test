@@ -15,6 +15,7 @@ import { world, system } from "@minecraft/server";
  * 差し替え表。ディメンション → 元のモブ → 差し替え先。
  *   to     : 差し替え先
  *   chance : 差し替える確率 (省略時は必ず)
+ *   otherwise : chance に外れたときの差し替え先 (省略時はそのまま)
  *   event  : 湧かせたあとに起こすイベント
  *   room   : 必要な空間 [半径, 高さ]。足りなければ差し替えない
  *
@@ -30,7 +31,8 @@ const MOB_SWAP = {
       room: [1, 3],   // 幅1.7・高さ2.4。狭い坑道に出すと挟まる
     },
     "minecraft:skeleton": { to: "minecraft:parched" },
-    "minecraft:spider": { to: "cavern:desert_spider" },
+    // 尾の針で毒を与えるサソリ。残りは砂漠グモ
+    "minecraft:spider": { to: "cavern:scorpion", chance: 0.35, otherwise: "cavern:desert_spider" },
     "minecraft:cave_spider": { to: "cavern:desert_spider" },
   },
   "cavern:ice_cavern": {
@@ -76,8 +78,14 @@ function resolve(table, typeId, dim, at, natural) {
     if (!rule) break;
     // 確率で決まるものは自然に湧いたときだけ。ロードのたびに引き直すと
     // いずれ全部がそちらになってしまう
-    if (rule.chance !== undefined && (!natural || Math.random() >= rule.chance)) break;
-    if (rule.room && !hasRoom(dim, at, rule.room)) break;
+    const hit = rule.chance === undefined || (natural && Math.random() < rule.chance);
+    if (!hit || (rule.room && !hasRoom(dim, at, rule.room))) {
+      if (!rule.otherwise) break;
+      type = rule.otherwise;
+      event = null;
+      changed = true;
+      continue;
+    }
     type = rule.to;
     event = rule.event ?? null;
     changed = true;

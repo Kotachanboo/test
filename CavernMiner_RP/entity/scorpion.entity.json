@@ -1,0 +1,40 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "cavern:scorpion",
+      "materials": {
+        "default": "entity_alphatest"
+      },
+      "textures": {
+        "default": "textures/entity/cavern/scorpion"
+      },
+      "geometry": {
+        "default": "geometry.cavern.scorpion"
+      },
+      "scripts": {
+        "pre_animation": [
+          "v.walk_amount = math.clamp(query.modified_move_speed * 3.0, 0.0, 1.0);",
+          "v.sting = (variable.attack_time > 0.0) ? math.sin(variable.attack_time * 180.0) : 0.0;"
+        ],
+        "animate": [
+          "walk",
+          "idle",
+          "sting"
+        ]
+      },
+      "animations": {
+        "walk": "animation.cavern.scorpion.walk",
+        "idle": "animation.cavern.scorpion.idle",
+        "sting": "animation.cavern.scorpion.sting"
+      },
+      "render_controllers": [
+        "controller.render.default"
+      ],
+      "spawn_egg": {
+        "base_color": "#dcb97f",
+        "overlay_color": "#b8201e"
+      }
+    }
+  }
+}

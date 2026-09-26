@@ -104,3 +104,5 @@ entity.cavern:blue_spider.name=Blue Spider
 item.spawn_egg.entity.cavern:blue_spider.name=Blue Spider Spawn Egg
 entity.cavern:desert_spider.name=Desert Spider
 item.spawn_egg.entity.cavern:desert_spider.name=Desert Spider Spawn Egg
+entity.cavern:scorpion.name=Scorpion
+item.spawn_egg.entity.cavern:scorpion.name=Scorpion Spawn Egg

@@ -1,0 +1,175 @@
+{
+  "format_version": "1.8.0",
+  "animations": {
+    "animation.cavern.scorpion.walk": {
+      "loop": true,
+      "anim_time_update": "query.modified_distance_moved",
+      "bones": {
+        "leg_r0": {
+          "rotation": [
+            0,
+            "math.sin(query.anim_time * 450 + 0) * 14 * v.walk_amount",
+            "math.max(0, math.cos(query.anim_time * 450 + 0)) * 12 * v.walk_amount"
+          ]
+        },
+        "leg_l0": {
+          "rotation": [
+            0,
+            "math.sin(query.anim_time * 450 + 180) * 14 * v.walk_amount",
+            "math.max(0, math.cos(query.anim_time * 450 + 180)) * -12 * v.walk_amount"
+          ]
+        },
+        "leg_r1": {
+          "rotation": [
+            0,
+            "math.sin(query.anim_time * 450 + 180) * 14 * v.walk_amount",
+            "math.max(0, math.cos(query.anim_time * 450 + 180)) * 12 * v.walk_amount"
+          ]
+        },
+        "leg_l1": {
+          "rotation": [
+            0,
+            "math.sin(query.anim_time * 450 + 0) * 14 * v.walk_amount",
+            "math.max(0, math.cos(query.anim_time * 450 + 0)) * -12 * v.walk_amount"
+          ]
+        },
+        "leg_r2": {
+          "rotation": [
+            0,
+            "math.sin(query.anim_time * 450 + 0) * 14 * v.walk_amount",
+            "math.max(0, math.cos(query.anim_time * 450 + 0)) * 12 * v.walk_amount"
+          ]
+        },
+        "leg_l2": {
+          "rotation": [
+            0,
+            "math.sin(query.anim_time * 450 + 180) * 14 * v.walk_amount",
+            "math.max(0, math.cos(query.anim_time * 450 + 180)) * -12 * v.walk_amount"
+          ]
+        },
+        "leg_r3": {
+          "rotation": [
+            0,
+            "math.sin(query.anim_time * 450 + 180) * 14 * v.walk_amount",
+            "math.max(0, math.cos(query.anim_time * 450 + 180)) * 12 * v.walk_amount"
+          ]
+        },
+        "leg_l3": {
+          "rotation": [
+            0,
+            "math.sin(query.anim_time * 450 + 0) * 14 * v.walk_amount",
+            "math.max(0, math.cos(query.anim_time * 450 + 0)) * -12 * v.walk_amount"
+          ]
+        },
+        "arm_r": {
+          "rotation": [
+            0,
+            "math.sin(query.anim_time * 450) * 5 * v.walk_amount",
+            0
+          ]
+        },
+        "arm_l": {
+          "rotation": [
+            0,
+            "-math.sin(query.anim_time * 450) * 5 * v.walk_amount",
+            0
+          ]
+        },
+        "tail0": {
+          "rotation": [
+            "math.sin(query.anim_time * 900) * 3 * v.walk_amount",
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "animation.cavern.scorpion.idle": {
+      "loop": true,
+      "bones": {
+        "tail0": {
+          "rotation": [
+            "math.sin(query.life_time * 80) * 3",
+            0,
+            0
+          ]
+        },
+        "stinger": {
+          "rotation": [
+            "math.sin(query.life_time * 80 + 60) * 4",
+            0,
+            0
+          ]
+        },
+        "claw_r": {
+          "rotation": [
+            0,
+            "math.max(0, math.sin(query.life_time * 120)) * -8",
+            0
+          ]
+        },
+        "claw_l": {
+          "rotation": [
+            0,
+            "math.max(0, math.sin(query.life_time * 120 + 90)) * 8",
+            0
+          ]
+        }
+      }
+    },
+    "animation.cavern.scorpion.sting": {
+      "loop": true,
+      "bones": {
+        "tail0": {
+          "rotation": [
+            "v.sting * 30",
+            0,
+            0
+          ]
+        },
+        "tail1": {
+          "rotation": [
+            "v.sting * -6",
+            0,
+            0
+          ]
+        },
+        "tail2": {
+          "rotation": [
+            "v.sting * -10",
+            0,
+            0
+          ]
+        },
+        "tail3": {
+          "rotation": [
+            "v.sting * -10",
+            0,
+            0
+          ]
+        },
+        "tail4": {
+          "rotation": [
+            "v.sting * -10",
+            0,
+            0
+          ]
+        },
+        "tail5": {
+          "rotation": [
+            "v.sting * -10",
+            0,
+            0
+          ]
+        },
+        "stinger": {
+          "rotation": [
+            "v.sting * 5",
+            0,
+            0
+          ]
+        }
+      }
+    }
+  }
+}
