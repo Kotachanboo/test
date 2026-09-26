@@ -112,7 +112,12 @@
           "mob"
         ]
       },
-      "minecraft:freezing_immune": {}
+      "minecraft:damage_sensor": {
+        "triggers": {
+          "cause": "freezing",
+          "deals_damage": "no"
+        }
+      }
     },
     "component_groups": {
       "minecraft:spider_angry": {

@@ -53,7 +53,13 @@ const GEN_RADIUS = 4;
  * 強制ロードは (2*(genRadius+AREA_MARGIN)+1)^2 チャンクになる。
  * 225 を超えるとロードが追いつかなくなった実績があるので、そこが上限の目安。
  */
-const AREA_MARGIN = 1;
+const AREA_MARGIN = 2;
+
+/**
+ * 強制ロードの半径の上限。15x15 = 225 チャンク。
+ * これを超えるとロードが追いつかなかった実績がある。
+ */
+const AREA_MAX = 7;
 
 /**
  * 進行方向へ何チャンク先読みするか。
@@ -1251,6 +1257,9 @@ function* decorateChunk(st, buf, cx, cz) {
 
   const x0 = cx * 16;
   const z0 = cz * 16;
+  // 部屋やジオードは最大7マスはみ出す。その範囲に人がいると埋まるので、
+  // 離れるまで置かない (記録しないので、あとで巡回が積み直す)
+  if (playerNear(st, x0 - 8, z0 - 8, x0 + 24, z0 + 24)) return;
   try {
     if (!(yield* waitForChunk(st, dim, x0 + 8, z0 + 8, 30))) return;
 
@@ -1267,6 +1276,18 @@ function* decorateChunk(st, buf, cx, cz) {
   } catch (e) {
     console.warn(`[CavernMiner] structures ${cx},${cz}: ${e}`);
   }
+}
+
+/** 範囲 (x1..x2, z1..z2) の中にそのディメンションのプレイヤーがいるか */
+function playerNear(st, x1, z1, x2, z2) {
+  for (const p of world.getAllPlayers()) {
+    try {
+      if (p.dimension.id !== st.cfg.id) continue;
+      const l = p.location;
+      if (l.x >= x1 && l.x < x2 && l.z >= z1 && l.z < z2) return true;
+    } catch (e) { /* noop */ }
+  }
+  return false;
 }
 
 /** 構造物側に渡す道具一式 */
@@ -1515,7 +1536,7 @@ const AREA_RECENTER = 2;
  * 強制ロードしていた。上の説明どおりの大きさに戻す。
  */
 function areaRadiusOf(st) {
-  return radiusOf(st) + AREA_MARGIN;
+  return Math.min(AREA_MAX, radiusOf(st) + AREA_MARGIN);
 }
 
 /** 張り替えで交互に使う名前。旧版の1枚目 (接尾辞なし) も掃除の対象 */
