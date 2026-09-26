@@ -1,0 +1,28 @@
+{
+  "format_version": "1.10.0",
+  "animation_controllers": {
+    "controller.animation.cavern.scorpion.sting": {
+      "initial_state": "default",
+      "states": {
+        "default": {
+          "transitions": [
+            {
+              "sting": "variable.attack_time > 0.0"
+            }
+          ]
+        },
+        "sting": {
+          "animations": [
+            "sting"
+          ],
+          "transitions": [
+            {
+              "default": "query.all_animations_finished"
+            }
+          ],
+          "blend_transition": 0.1
+        }
+      }
+    }
+  }
+}

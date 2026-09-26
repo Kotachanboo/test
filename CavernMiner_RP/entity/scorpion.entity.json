@@ -14,19 +14,19 @@
       },
       "scripts": {
         "pre_animation": [
-          "v.walk_amount = math.clamp(query.modified_move_speed * 3.0, 0.0, 1.0);",
-          "v.sting = (variable.attack_time > 0.0) ? math.sin(variable.attack_time * 180.0) : 0.0;"
+          "v.walk_amount = math.clamp(query.modified_move_speed * 3.0, 0.0, 1.0);"
         ],
         "animate": [
           "walk",
           "idle",
-          "sting"
+          "sting_controller"
         ]
       },
       "animations": {
         "walk": "animation.cavern.scorpion.walk",
         "idle": "animation.cavern.scorpion.idle",
-        "sting": "animation.cavern.scorpion.sting"
+        "sting": "animation.cavern.scorpion.sting",
+        "sting_controller": "controller.animation.cavern.scorpion.sting"
       },
       "render_controllers": [
         "controller.render.default"

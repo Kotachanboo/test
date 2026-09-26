@@ -78,7 +78,7 @@ for side, sx in (("r", -1), ("l", 1)):
 
 # ---------------------------------------------------------------- 尾
 # 後ろへまっすぐ伸ばした節を、x の回転で1節ずつ反らせて背中の上へ巻き上げる
-TAIL = [(5, 40), (5, 35), (4, 35), (4, 35), (4, 32), (3, 28)]   # (幅, 反り)
+TAIL = [(5, 35), (5, 28), (4, 22), (4, 16), (4, 12), (3, 8)]   # (幅, 反り)。針は背中の後ろ寄りに構える
 z = 8
 parent = "body"
 for i, (w, pitch) in enumerate(TAIL):
@@ -143,9 +143,15 @@ def pack_and_paint():
             row_h = max(row_h, uh)
     return img
 
+# UV の割り当ては毎回行う (モデルに必要)。テクスチャは手で描いたものがあれば上書きしない。
+# 描き直したいときだけ --repaint を付ける。
+# 立方体の大きさや並び順を変えると UV の位置がずれ、手描きのテクスチャが合わなくなる。
+# 形を変えるときは回転 (rotation) だけにするか、テクスチャも描き直す。
 img = pack_and_paint()
-os.makedirs(os.path.join(RP, "textures/entity/cavern"), exist_ok=True)
-img.save(os.path.join(RP, "textures/entity/cavern/scorpion.png"))
+tex_path = os.path.join(RP, "textures/entity/cavern/scorpion.png")
+if "--repaint" in sys.argv or not os.path.exists(tex_path):
+    os.makedirs(os.path.dirname(tex_path), exist_ok=True)
+    img.save(tex_path)
 
 geo = {
     "format_version": "1.12.0",

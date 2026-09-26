@@ -1381,16 +1381,6 @@ function structureCtx(st, dim, cx, cz, x0, z0, wallSpots, isSolid) {
 
     captive: (x, y, z, rand) => spawnCaptive(dim, x, y, z, rand),
 
-    /** バニラの feature を名前で置く。成功したら true */
-    placeFeature: (id, x, y, z) => {
-      try {
-        dim.placeFeature(id, { x, y, z }, true);
-        return true;
-      } catch (e) {
-        return false;   // 周囲に空洞が多いと中止されるので、失敗は想定内
-      }
-    },
-
     /** 構造物を置く。成功したら true */
     placeStructure: (id, x, y, z) => {
       try {

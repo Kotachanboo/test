@@ -151,24 +151,13 @@ function* placeDungeon(ctx, cfg, rand) {
 // アメジストジオード
 // ===========================================================================
 
-/** バニラのジオード。芽や結晶の房まで本家どおりに生える */
-const VANILLA_GEODE = "minecraft:amethyst_geode_feature";
-
+/*
+ * バニラのジオード (placeFeature) は使わない。
+ * 地形生成用の書き込みなので、既に読み込まれているチャンクに置くと
+ * クライアントへ変化が伝わらず、アメジストが周りの石のまま見えていた
+ * (ブロックを触ると本当の姿に変わる)。fillBlocks で自作すれば普通に表示される。
+ */
 function* placeGeode(ctx, cfg, rand) {
-  // まずバニラの feature を試す。ネイティブ呼び出し1回で済む。
-  // ただしバニラは周囲に空洞が多いと生成を中止するので、何か所か試す
-  if (ctx.placeFeature) {
-    for (let t = 0; t < 3; t++) {
-      const s = findAnywhere(ctx, rand);
-      if (!s) break;
-      if (ctx.placeFeature(VANILLA_GEODE, s[0], s[1], s[2])) {
-        yield;
-        return;
-      }
-    }
-  }
-
-  // バニラが使えない・どこも置けなかったときは自作で作る
   const [rmin, rmax] = cfg.geodeRadius;
   const outer = rmin + Math.floor(rand() * (rmax - rmin + 1));
 
