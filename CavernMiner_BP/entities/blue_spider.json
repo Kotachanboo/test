@@ -140,8 +140,8 @@
         },
         "minecraft:behavior.nearest_attackable_target": {
           "attack_interval": {
-            "min": 10,
-            "max": 10
+            "range_min": 10,
+            "range_max": 10
           },
           "must_see": true,
           "entity_types": [
@@ -183,8 +183,8 @@
         },
         "minecraft:behavior.nearest_attackable_target": {
           "attack_interval": {
-            "min": 5,
-            "max": 5
+            "range_min": 5,
+            "range_max": 5
           },
           "must_see": true,
           "entity_types": [

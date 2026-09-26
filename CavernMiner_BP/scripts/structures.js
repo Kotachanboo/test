@@ -169,12 +169,20 @@ function* placeGeode(ctx, cfg, rand) {
   }
 
   // バニラが使えない・どこも置けなかったときは自作で作る
-  const spot = findAnywhere(ctx, rand);
+  const [rmin, rmax] = cfg.geodeRadius;
+  const outer = rmin + Math.floor(rand() * (rmax - rmin + 1));
+
+  // 岩の中に埋まった場所を選ぶ。以前は空洞をまたいでもそのまま置いたので、
+  // 洞窟の真ん中に玄武岩の球が浮いたり、通路を塞いだりしていた。
+  // バニラも周りが空洞だらけの場所には置かない
+  let spot = null;
+  for (let t = 0; t < 8 && !spot; t++) {
+    const s = findAnywhere(ctx, rand);
+    if (s && openFraction(ctx, s, outer) <= GEODE_MAX_OPEN) spot = s;
+  }
   if (!spot) return;
 
   const [cx, cy, cz] = spot;
-  const [rmin, rmax] = cfg.geodeRadius;
-  const outer = rmin + Math.floor(rand() * (rmax - rmin + 1));
   const calcite = outer - 1;
   const amethyst = outer - 2;
   const hollow = outer - 3;
@@ -209,17 +217,22 @@ function* placeGeode(ctx, cfg, rand) {
    * 数秒間処理を譲らず、ウォッチドッグにアドオンごと止められる。
    * 同じブロックが z 方向に続く区間はまとめて置き、1層ごとに譲る。
    * (中の空洞はほぼ連続した空気なので、呼び出しが大きく減る)
+   *
+   * 置き換えるのは岩だけ。洞窟が通っていればジオードはそこで切れて見える
+   * (バニラで洞窟がジオードを削っているのと同じ見た目)。
    */
+  const budding = [];
   for (let dy = -outer; dy <= outer; dy++) {
     for (let dx = -outer; dx <= outer; dx++) {
       let runStart = 0, runBlock = null;
       const flush = (end) => {
         if (runBlock !== null) {
-          ctx.fill(cx + dx, cy + dy, cz + runStart, cx + dx, cy + dy, cz + end, runBlock);
+          ctx.fillInRock(cx + dx, cy + dy, cz + runStart, cx + dx, cy + dy, cz + end, runBlock);
         }
       };
       for (let dz = -outer; dz <= outer; dz++) {
         const b = blockAt(dx, dy, dz);
+        if (b === "minecraft:budding_amethyst") budding.push([cx + dx, cy + dy, cz + dz]);
         if (b !== runBlock) {
           flush(dz - 1);
           runStart = dz;
@@ -230,7 +243,49 @@ function* placeGeode(ctx, cfg, rand) {
     }
     yield;   // 1層ごとに譲る
   }
+
+  // 芽生えたアメジストの空洞側に芽や房を生やす。バニラと同じく35%
+  let n = 0;
+  for (const [x, y, z] of budding) {
+    for (const [face, dx, dy, dz] of BUD_FACES) {
+      if (rand() >= 0.35) continue;
+      ctx.placeBud(x + dx, y + dy, z + dz, BUDS[Math.floor(rand() * BUDS.length)], face);
+    }
+    if (++n % 16 === 0) yield;
+  }
 }
+
+/** 空洞が多すぎる場所には置かない。外殻の範囲で空洞がこの割合を超えたら別の場所 */
+const GEODE_MAX_OPEN = 0.12;
+
+/** 球の中を粗く調べて、空洞 (岩でないマス) の割合を返す */
+function openFraction(ctx, [cx, cy, cz], r) {
+  let open = 0, total = 0;
+  for (let dx = -r; dx <= r; dx += 2) {
+    for (let dy = -r; dy <= r; dy += 2) {
+      for (let dz = -r; dz <= r; dz += 2) {
+        if (dx * dx + dy * dy + dz * dz > r * r) continue;
+        total++;
+        if (!ctx.isRock(cx + dx, cy + dy, cz + dz)) open++;
+      }
+    }
+  }
+  return total ? open / total : 1;
+}
+
+/** 芽と房。小さいものほど多い */
+const BUDS = [
+  "minecraft:small_amethyst_bud", "minecraft:small_amethyst_bud",
+  "minecraft:medium_amethyst_bud", "minecraft:medium_amethyst_bud",
+  "minecraft:large_amethyst_bud", "minecraft:amethyst_cluster",
+];
+
+/** 生える向き (block_face) と、芽生えたアメジストから見た位置 */
+const BUD_FACES = [
+  ["up", 0, 1, 0], ["down", 0, -1, 0],
+  ["east", 1, 0, 0], ["west", -1, 0, 0],
+  ["south", 0, 0, 1], ["north", 0, 0, -1],
+];
 
 // ===========================================================================
 // 石レンガの小部屋 (構造物)

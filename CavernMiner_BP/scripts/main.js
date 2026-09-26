@@ -1290,6 +1290,13 @@ function playerNear(st, x1, z1, x2, z2) {
   return false;
 }
 
+/** 岩として扱わないもの */
+const NOT_ROCK = [
+  "minecraft:air",
+  "minecraft:water", "minecraft:flowing_water",
+  "minecraft:lava", "minecraft:flowing_lava",
+];
+
 /** 構造物側に渡す道具一式 */
 function structureCtx(st, dim, cx, cz, x0, z0, wallSpots, isSolid) {
   return {
@@ -1313,6 +1320,40 @@ function structureCtx(st, dim, cx, cz, x0, z0, wallSpots, isSolid) {
     set: (x, y, z, block) => setSafe(st, dim, x, y, z, block),
     fill: (x1, y1, z1, x2, y2, z2, block) =>
       fillSafe(st, dim, x1, y1, z1, x2, y2, z2, block),
+
+    /** 実際に置かれているブロックが岩か (空気・流体・未ロードは岩でない) */
+    isRock: (x, y, z) => {
+      if (y < st.yMin || y > st.yMax) return false;
+      try {
+        const b = dim.getBlock({ x, y, z });
+        return !!b && !NOT_ROCK.includes(b.typeId);
+      } catch (e) {
+        return false;
+      }
+    },
+
+    /** 岩のマスだけを置き換える。空洞や水・溶岩はそのまま残す */
+    fillInRock: (x1, y1, z1, x2, y2, z2, block) => {
+      if (y2 < st.yMin || y1 > st.yMax) return false;
+      try {
+        dim.fillBlocks(
+          new BlockVolume({ x: x1, y: Math.max(y1, st.yMin), z: z1 },
+                          { x: x2, y: Math.min(y2, st.yMax), z: z2 }),
+          block, { blockFilter: { excludeTypes: NOT_ROCK } });
+        return true;
+      } catch (e) {
+        return false;   // 置き換え指定が使えない環境では置かない (空洞を塞がない)
+      }
+    },
+
+    /** アメジストの芽を向き付きで置く。空気のときだけ */
+    placeBud: (x, y, z, id, face) => {
+      try {
+        const block = dim.getBlock({ x, y, z });
+        if (!block || block.typeId !== BLOCK_AIR) return;
+        block.setPermutation(BlockPermutation.resolve(id, { "minecraft:block_face": face }));
+      } catch (e) { /* noop */ }
+    },
 
     placeLichen: (x, y, z, face) => {
       // 置き場所は密度から選ぶので、隣の構造物がそこにあっても分からない。
