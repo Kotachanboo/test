@@ -1530,10 +1530,11 @@ function inArea(st, cx, cz) {
   return Math.max(Math.abs(cx - a.cx), Math.abs(cz - a.cz)) <= st.areaR;
 }
 
+/** コマンドを実行する。例外が出たときだけ失敗とみなす (以前の版と同じ判定) */
 function runOk(dim, cmd) {
   try {
-    const r = dim.runCommand(cmd);
-    return !r || r.successCount === undefined || r.successCount > 0;
+    dim.runCommand(cmd);
+    return true;
   } catch (e) {
     return false;
   }

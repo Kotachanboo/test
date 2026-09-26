@@ -1,5 +1,5 @@
 {
-  "format_version": "1.26.50",
+  "format_version": "1.21.100",
   "minecraft:entity": {
     "description": {
       "identifier": "cavern:desert_spider",
@@ -8,30 +8,6 @@
       "spawn_category": "monster"
     },
     "components": {
-      "minecraft:behavior.avoid_mob_type": {
-        "entity_types": [
-          {
-            "filters": {
-              "all_of": [
-                {
-                  "test": "is_family",
-                  "subject": "other",
-                  "value": "armadillo"
-                },
-                {
-                  "test": "enum_property",
-                  "subject": "other",
-                  "domain": "minecraft:armadillo_state",
-                  "value": "unrolled"
-                }
-              ]
-            },
-            "max_dist": 6,
-            "sprint_speed_multiplier": 1.2
-          }
-        ],
-        "priority": 2
-      },
       "minecraft:behavior.float": {
         "priority": 1
       },
@@ -64,11 +40,6 @@
       "minecraft:behavior.random_stroll": {
         "priority": 6,
         "speed_multiplier": 0.8
-      },
-      "minecraft:block_movement_slowdown_immunity": {
-        "blocks": [
-          "minecraft:web"
-        ]
       },
       "minecraft:breathable": {
         "suffocate_time": 0,

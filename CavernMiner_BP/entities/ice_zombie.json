@@ -1,5 +1,5 @@
 {
-  "format_version": "1.26.50",
+  "format_version": "1.21.100",
   "minecraft:entity": {
     "description": {
       "identifier": "cavern:ice_zombie",
@@ -452,7 +452,6 @@
         ],
         "singular_pickup": true
       },
-      "minecraft:spawn_egg_interaction": {},
       "minecraft:type_family": {
         "family": [
           "ice_zombie",
@@ -535,24 +534,6 @@
         "minecraft:loot": {
           "table": "loot_tables/entities/ice_zombie.json"
         }
-      },
-      "minecraft:not_on_zombie_horse": {
-        "minecraft:behavior.use_kinetic_weapon": {
-          "approach_distance": 10,
-          "reposition_distance": {
-            "min": 6,
-            "max": 7
-          },
-          "cooldown_distance": {
-            "min": 9,
-            "max": 11
-          },
-          "weapon_reach_multiplier": 0.5,
-          "weapon_min_speed_multiplier": 0.2,
-          "hijack_mount_navigation": true,
-          "track_target": true,
-          "priority": 3
-        }
       }
     },
     "events": {
@@ -595,7 +576,6 @@
           "component_groups": [
             "minecraft:zombie_default",
             "minecraft:zombie_adult",
-            "minecraft:not_on_zombie_horse",
             "minecraft:can_have_equipment"
           ]
         }
@@ -605,7 +585,6 @@
           "component_groups": [
             "minecraft:zombie_default",
             "minecraft:zombie_baby",
-            "minecraft:not_on_zombie_horse",
             "minecraft:can_have_equipment"
           ]
         }
