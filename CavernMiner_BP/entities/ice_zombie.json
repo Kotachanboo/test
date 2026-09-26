@@ -515,10 +515,6 @@
         "minecraft:scale": {
           "value": 0.5
         },
-        "minecraft:collision_box": {
-          "height": 1.96,
-          "width": 0.98
-        },
         "minecraft:type_family": {
           "family": [
             "baby_undead",
